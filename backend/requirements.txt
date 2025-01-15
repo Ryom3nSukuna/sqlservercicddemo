@@ -1,1 +1,4 @@
 flask
+python-dotenv
+pyodbc
+gunicorn

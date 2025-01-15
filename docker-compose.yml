@@ -1,11 +1,58 @@
-version: "3.8"
+version: "3.9"
 services:
   flask-app:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "5001:5001"
-    volumes:
-      - ./backend:/app
+      - "${APP_PORT}:5000"
     environment:
-      FLASK_ENV: development
+      FLASK_ENV: "${FLASK_ENV}"
+      APP_PORT: "${APP_PORT}"
+      SQL_SERVER: "${SQL_SERVER}"
+      SQL_PORT: "${SQL_PORT}"      # Add SQL_PORT
+      DATABASE: "${DATABASE}"      # Add DATABASE
+      DBUID: "${DBUID}"      # Add USERNAME
+      DBPWD: "${DBPWD}"      # Add PASSWORD
+    depends_on:
+      sqlserver:  # Wait for the SQL Server container to start
+        condition: service_healthy  # Wait for SQL Server health check to pass
+    volumes:
+      - init-status:/var/shared  # Mount the shared volume to Flask container
+      - ./backend:/app  # Mount your local backend folder to /app in the container
+    networks:
+      - sqlserver-net
+
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlserver  # Custom Dockerfile for SQL Server
+    container_name: "${SQL_SERVER}"  # Use environment-specific container name
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${DBPWD}"
+    ports:
+      - "${SQL_PORT}:1433"
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d:ro  # Mount init scripts as read-only
+      - ./run-sqlserver.sh:/usr/bin/run-sqlserver.sh:ro  # Mount the script into the container
+      - init-status:/var/shared  # Mount the shared volume to SQL Server container
+      - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
+    networks:
+      - sqlserver-net
+    command: /bin/bash /usr/bin/run-sqlserver.sh
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${DBPWD}", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  init-status:  # Shared volume to track initialization status
+  dev.sqlserver_data:
+  qa.sqlserver_data:
+
+networks:
+  sqlserver-net:
+    name: sqlserver-net
+    driver: bridge

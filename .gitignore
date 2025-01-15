@@ -169,3 +169,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.env*
+*.pyc
+__pycache__/
+*.log
+*.db
+*.mdf
+*.ldf
+Dockerfile.*
+volumes/
