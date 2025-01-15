@@ -1,0 +1,30 @@
+# Use the base SQL Server image
+FROM mcr.microsoft.com/mssql/server:2019-latest
+
+# Install required dependencies
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg \
+    gnupg2 \
+    unixodbc \
+    unixodbc-dev \
+    libodbc1 \
+    curl \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends mssql-tools msodbcsql17 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create a shared directory for the signal file
+RUN mkdir -p /var/shared && chmod -R 777 /var/shared
+
+# Copy custom entrypoint script
+COPY ./run-sqlserver.sh /usr/bin/run-sqlserver.sh
+RUN chmod +x /usr/bin/run-sqlserver.sh
+
+# Switch back to the mssql user
+USER mssql
+
+# Set the custom entrypoint script
+CMD ["/bin/bash", "/usr/bin/run-sqlserver.sh"]
