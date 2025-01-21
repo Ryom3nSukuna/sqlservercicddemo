@@ -15,7 +15,7 @@ def wait_for_sql_server_and_init():
             # Check SQL Server connection
             connection = pyodbc.connect(
                 f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-                f"SERVER={server},{port};"
+                f"SERVER={server};"
                 f"UID={username};"
                 f"PWD={password};"
                 f"DATABASE=master"
@@ -30,7 +30,7 @@ def wait_for_sql_server_and_init():
             else:
                 print("Initialization not yet completed. Waiting...")
         except Exception as e:
-            print(f"Waiting for SQL Server to be ready... ({e})")
+            print(f"Waiting for SQL Server to be ready... ({e}), Server:{server}, UID:{username}, PWD:{password}")
 
         retries -= 1
         time.sleep(5)

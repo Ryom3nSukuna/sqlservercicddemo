@@ -16,14 +16,13 @@ wait_for_sqlserver() {
 # Wait for SQL Server to be ready
 wait_for_sqlserver
 
-# Execute initialization scripts
-echo "Executing SQL scripts from /docker-entrypoint-initdb.d"
-for script in /docker-entrypoint-initdb.d/**/*.sql; do
-    if [[ -f "$script" ]]; then
-        echo "Running $script..."
-        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD}" -i "$script"
-    fi
-done
+# Execute the specific initialization script
+if [ -n "$INIT_SQL_FILE" ] && [ -f "$INIT_SQL_FILE" ]; then
+    echo "Running initialization script: $INIT_SQL_FILE"
+    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD}" -i "$INIT_SQL_FILE"
+else
+    echo "Initialization script not found or not specified!"
+fi
 
 # Signal that initialization is complete
 echo "INIT_COMPLETED" > /var/shared/init_completed.txt

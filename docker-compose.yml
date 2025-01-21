@@ -4,24 +4,25 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: "flask-${FLASK_ENV}"
     ports:
       - "${APP_PORT}:5000"
     environment:
       FLASK_ENV: "${FLASK_ENV}"
       APP_PORT: "${APP_PORT}"
       SQL_SERVER: "${SQL_SERVER}"
-      SQL_PORT: "${SQL_PORT}"      # Add SQL_PORT
       DATABASE: "${DATABASE}"      # Add DATABASE
       DBUID: "${DBUID}"      # Add USERNAME
       DBPWD: "${DBPWD}"      # Add PASSWORD
+      COMPOSE_PROJECT_NAME: "${FLASK_ENV}_project"  # Dynamically set project name
     depends_on:
       sqlserver:  # Wait for the SQL Server container to start
         condition: service_healthy  # Wait for SQL Server health check to pass
     volumes:
-      - init-status:/var/shared  # Mount the shared volume to Flask container
+      - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to Flask container
       - ./backend:/app  # Mount your local backend folder to /app in the container
     networks:
-      - sqlserver-net
+      - "${FLASK_ENV}-net"
 
   sqlserver:
     build:
@@ -31,28 +32,44 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "${DBPWD}"
+      COMPOSE_PROJECT_NAME: "${FLASK_ENV}_project"  # Dynamically set project name
+      INIT_SQL_FILE: "/docker-entrypoint-initdb.d/${FLASK_ENV}/init.sql"
     ports:
       - "${SQL_PORT}:1433"
     volumes:
       - ./scripts:/docker-entrypoint-initdb.d:ro  # Mount init scripts as read-only
       - ./run-sqlserver.sh:/usr/bin/run-sqlserver.sh:ro  # Mount the script into the container
-      - init-status:/var/shared  # Mount the shared volume to SQL Server container
+      - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to SQL Server container
       - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
     networks:
-      - sqlserver-net
+      - "${FLASK_ENV}-net"
     command: /bin/bash /usr/bin/run-sqlserver.sh
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${DBPWD}", "-Q", "SELECT 1"]
-      interval: 10s
+      test: [
+        "CMD-SHELL",
+        "test -f /var/shared/init_completed.txt && ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DBPWD} -Q 'SELECT 1'"
+      ]
+      interval: 100s
       timeout: 5s
       retries: 5
 
 volumes:
-  init-status:  # Shared volume to track initialization status
-  dev.sqlserver_data:
-  qa.sqlserver_data:
+  dev_init_status:
+    name: dev_init_status  # Explicitly define volume name
+  qa_init_status:
+    name: qa_init_status
+  dev_sqlserver_data:
+    name: dev_sqlserver_data
+  qa_sqlserver_data:
+    name: qa_sqlserver_data
 
 networks:
-  sqlserver-net:
-    name: sqlserver-net
+  dev-net:
+    name: dev-net
+    driver: bridge
+  qa-net:
+    name: qa-net
+    driver: bridge
+  prod-net:
+    name: prod-net
     driver: bridge

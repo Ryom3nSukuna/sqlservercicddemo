@@ -177,3 +177,4 @@ __pycache__/
 *.db
 *.mdf
 *.ldf
+start-environment*.sh

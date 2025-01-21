@@ -1,5 +1,5 @@
 # Use the base SQL Server image
-FROM mcr.microsoft.com/mssql/server:2019-latest
+FROM mcr.microsoft.com/mssql/server:2022-latest
 
 # Install required dependencies
 USER root
@@ -22,9 +22,6 @@ RUN mkdir -p /var/shared && chmod -R 777 /var/shared
 # Copy custom entrypoint script
 COPY ./run-sqlserver.sh /usr/bin/run-sqlserver.sh
 RUN chmod +x /usr/bin/run-sqlserver.sh
-
-# Switch back to the mssql user
-USER mssql
 
 # Set the custom entrypoint script
 CMD ["/bin/bash", "/usr/bin/run-sqlserver.sh"]

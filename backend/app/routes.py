@@ -1,9 +1,15 @@
 import os
 import pyodbc
 import time
+import logging
 from flask import Flask, make_response, request  # Import make_response from Flask
 
 app = Flask(__name__)
+
+# Set up logging
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)  # Log at INFO level
+app.logger.addHandler(handler)
 
 # Database connection string
 def get_db_connection():
@@ -17,12 +23,12 @@ def get_db_connection():
             password = os.getenv("DBPWD")
             
             # Log connection details
-            app.logger.info(f"Connecting to SQL Server: {server}:{port}, Database: {database}, User: {username}")
+            app.logger.info(f"Connecting to SQL Server: {server}, Database: {database}, User: {username}")
 
             # Attempt connection
             connection = pyodbc.connect(
                 f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-                f"SERVER={server},{port};"
+                f"SERVER={server};"
                 f"DATABASE={database};"
                 f"UID={username};"
                 f"PWD={password}"
@@ -40,7 +46,7 @@ def home():
     try:
         conn = get_db_connection()
         conn.close()
-        response = f"Connected to {os.getenv('DATABASE')} on {os.getenv('SQL_SERVER')}:{os.getenv('SQL_PORT')} successfully!"
+        response = f"Connected to {os.getenv('DATABASE')} on {os.getenv('SQL_SERVER')} successfully!"
         resp = make_response(response)
         resp.headers["Content-Type"] = "text/plain"
         return resp
@@ -55,15 +61,21 @@ def home():
 def health():
     return "Flask app is running!", 200
 
-if __name__ == "__main__":
-    # Add a delay before starting the Flask app
-    time.sleep(15)  # Wait 15 seconds to ensure SQL Server is ready
-    app.run(
-        debug=os.getenv("FLASK_ENV") == "development",
-        host="0.0.0.0",
-        port=int(os.getenv("APP_PORT",5000))  # Port is entirely driven by .env
-    )
-
 @app.before_request
 def log_request_info():
     app.logger.debug(f"Request from: {request.remote_addr}, Method: {request.method}, Path: {request.path}")
+
+if __name__ == "__main__":
+    try:
+        # Add a delay before starting the Flask app
+        time.sleep(15)  # Wait 15 seconds to ensure SQL Server is ready
+
+        app.run(
+            debug=os.getenv("FLASK_ENV") == "dev",
+            host="0.0.0.0",
+            port=int(os.getenv("APP_PORT", 5000))  # Port is entirely driven by .env
+        )
+    except Exception as e:
+        app.logger.error(f"Failed to start Flask app: {e}", exc_info=True)
+        while True:  # Keep container alive in case of failure
+            time.sleep(30)
