@@ -31,6 +31,7 @@ jobs:
 
       - name: Generate .env.dev for Docker Compose
         run: |
+            echo "FLASK_ENV=dev" >> .env.dev
             echo "SQL_SERVER=${{ secrets.SQL_SERVER_DEV }}" > .env.dev
             echo "DATABASE=${{ secrets.DATABASE_DEV }}" >> .env.dev
             echo "DBUID=${{ secrets.DBUID_DEV }}" >> .env.dev
@@ -93,6 +94,7 @@ jobs:
 
       - name: Generate .env.qa for Docker Compose
         run: |
+            echo "FLASK_ENV=dev" >> .env.dev
             echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
             echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
             echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
