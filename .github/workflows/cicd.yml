@@ -52,7 +52,7 @@ jobs:
         env:
           ENV_FILE: .env.dev
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d
+          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} -p dev up --build -d
 
       - name: Execute DB Scripts for Dev
         env:
@@ -115,7 +115,7 @@ jobs:
         env:
           ENV_FILE: .env.qa
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d
+          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} -p qa up --build -d
 
       - name: Execute DB Scripts for QA
         env:
