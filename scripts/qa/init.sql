@@ -20,3 +20,10 @@ GO
 -- Grant the user db_owner permissions in [QaDB]
 EXEC sp_addrolemember 'db_owner', 'QaAdminUser';
 GO
+
+CREATE TABLE ExecutedScripts (
+    ScriptName NVARCHAR(255) PRIMARY KEY,
+    ExecutedAt DATETIME DEFAULT GETDATE(),
+    Status NVARCHAR(50)
+);
+GO

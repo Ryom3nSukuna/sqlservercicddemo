@@ -21,3 +21,10 @@ GO
 -- Grant the user db_owner permissions in [DevDB]
 EXEC sp_addrolemember 'db_owner', 'DevAdminUser';
 GO
+
+CREATE TABLE ExecutedScripts (
+    ScriptName NVARCHAR(255) PRIMARY KEY,
+    ExecutedAt DATETIME DEFAULT GETDATE(),
+    Status NVARCHAR(50)
+);
+GO
