@@ -16,7 +16,6 @@ jobs:
     name: Continuous Integration for Dev
     runs-on: ubuntu-latest
     environment: dev
-    secrets: inherit
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -41,18 +40,19 @@ jobs:
             echo "APP_PORT=5001" >> .env.dev
             echo "FLASK_ENV=dev" >> .env.dev
       
-      - name: Debug Secrets
+      - name: Verify Secret Access
         run: |
-            echo "SQL_SERVER_DEV=${{ secrets.SQL_SERVER_DEV }}"
-            echo "DATABASE_DEV=${{ secrets.DATABASE_DEV }}"
-            echo "DBUID_DEV=${{ secrets.DBUID_DEV }}"
-            echo "DBPWD_DEV=****"  # Mask sensitive data
+            if [ -n "${{ secrets.SQL_SERVER_DEV }}" ]; then
+                echo "Secret is set and has length: ${#${{ secrets.SQL_SERVER_DEV }}}"
+            else
+                echo "Secret is not set."
+            fi
     
       - name: Start Dev Environment with Docker Compose
         env:
           ENV_FILE: .env.dev
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d dev_sqlserver
+          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d
 
       - name: Execute DB Scripts for Dev
         env:
@@ -115,7 +115,7 @@ jobs:
         env:
           ENV_FILE: .env.qa
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d qa_sqlserver
+          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} up --build -d
 
       - name: Execute DB Scripts for QA
         env:
