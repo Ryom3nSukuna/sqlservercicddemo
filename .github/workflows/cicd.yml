@@ -39,10 +39,12 @@ jobs:
             echo "APP_PORT=5001" >> .env.dev
             echo "FLASK_ENV=dev" >> .env.dev
       
-      - name: Debug .env.dev File
+      - name: Debug Secrets
         run: |
-            echo "Contents of the file .env.dev:"
-            cat .env.dev
+            echo "SQL_SERVER_DEV=${{ secrets.SQL_SERVER_DEV }}"
+            echo "DATABASE_DEV=${{ secrets.DATABASE_DEV }}"
+            echo "DBUID_DEV=${{ secrets.DBUID_DEV }}"
+            echo "DBPWD_DEV=****"  # Mask sensitive data
     
       - name: Start Dev Environment with Docker Compose
         env:
