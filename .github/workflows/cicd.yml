@@ -31,13 +31,13 @@ jobs:
 
       - name: Generate .env.dev for Docker Compose
         run: |
-            echo "FLASK_ENV=dev" >> .env.dev
             echo "SQL_SERVER=${{ secrets.SQL_SERVER_DEV }}" > .env.dev
             echo "DATABASE=${{ secrets.DATABASE_DEV }}" >> .env.dev
             echo "DBUID=${{ secrets.DBUID_DEV }}" >> .env.dev
             echo "DBPWD=${{ secrets.DBPWD_DEV }}" >> .env.dev
             echo "SQL_PORT=1401" >> .env.dev
             echo "APP_PORT=5001" >> .env.dev
+            echo "FLASK_ENV=dev" >> .env.dev
       
       - name: Start Dev Environment with Docker Compose
         env:
@@ -94,13 +94,13 @@ jobs:
 
       - name: Generate .env.qa for Docker Compose
         run: |
-            echo "FLASK_ENV=qa" >> .env.qa
             echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
             echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
             echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
             echo "DBPWD=${{ secrets.DBPWD_QA }}" >> .env.qa
             echo "SQL_PORT=1402" >> .env.qa
             echo "APP_PORT=5002" >> .env.qa
+            echo "FLASK_ENV=qa" >> .env.qa
       
       - name: Start QA Environment with Docker Compose
         env:
