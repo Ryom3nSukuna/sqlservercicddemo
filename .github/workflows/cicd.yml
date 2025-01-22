@@ -94,7 +94,7 @@ jobs:
 
       - name: Generate .env.qa for Docker Compose
         run: |
-            echo "FLASK_ENV=dev" >> .env.dev
+            echo "FLASK_ENV=qa" >> .env.qa
             echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
             echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
             echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
