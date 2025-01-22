@@ -15,6 +15,7 @@ jobs:
   ci_dev:
     name: Continuous Integration for Dev
     runs-on: ubuntu-latest
+    environment: myenvironment
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
