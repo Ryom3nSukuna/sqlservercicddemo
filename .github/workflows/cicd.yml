@@ -16,6 +16,7 @@ jobs:
     name: Continuous Integration for Dev
     runs-on: ubuntu-latest
     environment: dev
+    secrets: inherit
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
