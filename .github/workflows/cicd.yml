@@ -41,7 +41,7 @@ jobs:
       
       - name: Debug .env.dev File
         run: |
-            echo "Contents of .env.dev:"
+            echo "Contents of the file .env.dev:"
             cat .env.dev
     
       - name: Start Dev Environment with Docker Compose
