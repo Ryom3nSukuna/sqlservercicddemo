@@ -62,18 +62,19 @@ jobs:
           DBUID: ${{ env.DBUID }}
           DBPWD: ${{ env.DBPWD }}
           SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
+          SQL_PORT: ${{ env.SQL_PORT }}
         run: |
           docker exec -i dev_sqlserver /bin/bash -c "
             for file in /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec/*.sql; do
               SCRIPT_NAME=\$(basename \"\$file\")
-              EXISTS=\$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '\$SCRIPT_NAME'\" -h -1)
+              EXISTS=\$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '\$SCRIPT_NAME'\" -h -1)
               if [ \"\$EXISTS\" -eq 0 ]; then
                 echo \"Executing \$SCRIPT_NAME...\"
-                /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -i \"\$file\"
+                /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -i \"\$file\"
                 if [ \$? -eq 0 ]; then
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Success')\"
+                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Success')\"
                 else
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Failure')\"
+                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Failure')\"
                   exit 1
                 fi
               else
