@@ -39,6 +39,11 @@ jobs:
             echo "APP_PORT=5001" >> .env.dev
             echo "FLASK_ENV=dev" >> .env.dev
       
+      - name: Debug .env.dev File
+        run: |
+            echo "Contents of .env.dev:"
+            cat .env.dev
+    
       - name: Start Dev Environment with Docker Compose
         env:
           ENV_FILE: .env.dev
