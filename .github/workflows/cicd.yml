@@ -1,5 +1,5 @@
 name: CI/CD Pipeline for SQL Server
-
+# added secrets
 on:
   push:
     branches:
