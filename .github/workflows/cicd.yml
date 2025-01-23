@@ -22,10 +22,14 @@ jobs:
 
       - name: Extract Sprint Folder from Branch Name
         id: sprint
+        shell: pwsh
         run: |
-          $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
-          $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
-          Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+            $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
+            Write-Host "Branch Name: $BRANCH_NAME"
+            $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
+            Write-Host "Sprint Folder: $SPRINT_FOLDER"
+            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+
       
       - name: Generate .env.dev File
         run: |
@@ -86,24 +90,22 @@ jobs:
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
         shell: cmd #see what is happening...
         
-      - name: Execute DB Scripts for Dev # unix format again test after lf
+      - name: Execute DB Scripts for Dev
         env:
             ENV_FILE: .env.dev
-            SQL_SERVER: ${{ env.SQL_SERVER_DEV }}
-            DATABASE: ${{ env.DATABASE_DEV }}
-            DBUID: ${{ env.DBUID_DEV }}
-            DBPWD: ${{ env.DBPWD_DEV }}
+            SQL_SERVER: ${{ secrets.SQL_SERVER_DEV }}
+            DATABASE: ${{ secrets.DATABASE_DEV }}
+            DBUID: ${{ secrets.DBUID_DEV }}
+            DBPWD: ${{ secrets.DBPWD_DEV }}
             SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
         run: |
             docker exec -i dev_sqlserver bash -c "
                 echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...'
-                cd /var/opt/mssql/db &&
+                cd /var/opt/sqlserver/db &&
                 chmod +x execute-sql-scripts.sh &&
-                SPRINT_FOLDER=${SPRINT_FOLDER} DATABASE=${DATABASE} DBUID=${DBUID} DBPWD=${DBPWD} ./execute-sql-scripts.sh
+                ./execute-sql-scripts.sh $SPRINT_FOLDER $DBUID $DBPWD $DATABASE
                 echo 'SQL script execution completed.'
             "
-
-
 
   cd_qa:
     name: Deploy to QA with Approval
