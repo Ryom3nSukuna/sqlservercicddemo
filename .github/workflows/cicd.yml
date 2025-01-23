@@ -100,7 +100,7 @@ jobs:
                         -e DBUID=${{ secrets.DBUID_DEV }} \
                         -e DBPWD=${{ secrets.DBPWD_DEV }} \
                         -e DATABASE=${{ secrets.DATABASE_DEV }} \
-                        dev_sqlserver bash -c "
+                        dev_sqlserver sh -c "
             echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...' &&
             cd /var/opt/sqlserver/db &&
             chmod +x execute-sql-scripts.sh &&
