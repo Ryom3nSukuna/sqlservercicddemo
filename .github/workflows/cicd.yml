@@ -67,8 +67,8 @@ jobs:
             ENV_FILE: .env.dev
             SQL_SERVER: ${{ secrets.SQL_SERVER_DEV }}
         run: |
-            Write-Output "SQL_SERVER=$env:SQL_SERVER"
-            docker-compose -f docker-compose.yml --env-file $env:ENV_FILE -p dev up --build -d
+            $ENV_FILE = ".env.dev"
+            Start-Process -FilePath "docker-compose" -ArgumentList "-f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d" -Verb RunAs -Wait
         shell: powershell
 
       - name: Execute DB Scripts for Dev
