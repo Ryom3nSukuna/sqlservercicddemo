@@ -22,7 +22,7 @@ jobs:
 
       - name: Extract Sprint Folder from Branch Name
         id: sprint
-        shell: pwsh
+        shell: powershell
         run: |
             $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
             Write-Host "Branch Name: $BRANCH_NAME"
