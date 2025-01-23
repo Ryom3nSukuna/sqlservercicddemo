@@ -100,12 +100,13 @@ jobs:
                 echo 'Starting execution of SQL scripts in Sprint Folder: ${{ env.SPRINT_FOLDER }}...' &&
                 cd /var/opt/sqlserver/db &&
                 chmod +x execute-sql-scripts.sh &&
-                SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} \
-                DBUID=${{ secrets.DBUID_DEV }} \
-                DBPWD=${{ secrets.DBPWD_DEV }} \
-                DATABASE=${{ secrets.DATABASE_DEV }} \
-                ./execute-sql-scripts.sh SPRINT_FOLDER=${SPRINT_FOLDER} DBUID=${DBUID} DBPWD=${DBPWD} DATABASE=${DATABASE}
+                ./execute-sql-scripts.sh \
+                    SPRINT_FOLDER='${{ env.SPRINT_FOLDER }}' \
+                    DBUID='${{ secrets.DBUID_DEV }}' \
+                    DBPWD='${{ secrets.DBPWD_DEV }}' \
+                    DATABASE='${{ secrets.DATABASE_DEV }}'
             "
+
 
   cd_qa:
     name: Deploy to QA with Approval
