@@ -84,7 +84,7 @@ jobs:
         run: |
             echo Using ENV_FILE=%ENV_FILE%
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
-        shell: cmd
+        shell: cmd #see what is happening...
         
       - name: Execute DB Scripts for Dev
         env:
