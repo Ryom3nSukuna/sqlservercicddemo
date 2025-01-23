@@ -1,5 +1,5 @@
 name: CI/CD Pipeline for SQL Server
-# added secrets proper
+
 on:
   push:
     branches:
@@ -23,60 +23,60 @@ jobs:
       - name: Extract Sprint Folder from Branch Name
         id: sprint
         run: |
-          $BRANCH_NAME = ${GITHUB_REF.Split('/')[-1]}
+          $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
           $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
-          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+          Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
       
       - name: Generate .env.dev for Docker Compose
         run: |
-          echo "SQL_SERVER=${{ secrets.SQL_SERVER_DEV }}" > .env.dev
-          echo "DATABASE=${{ secrets.DATABASE_DEV }}" >> .env.dev
-          echo "DBUID=${{ secrets.DBUID_DEV }}" >> .env.dev
-          echo "DBPWD=${{ secrets.DBPWD_DEV }}" >> .env.dev
-          echo "SQL_PORT=1401" >> .env.dev
-          echo "APP_PORT=5001" >> .env.dev
-          echo "FLASK_ENV=dev" >> .env.dev
+          Write-Output "SQL_SERVER=$env:SQL_SERVER_DEV" > .env.dev
+          Write-Output "DATABASE=$env:DATABASE_DEV" >> .env.dev
+          Write-Output "DBUID=$env:DBUID_DEV" >> .env.dev
+          Write-Output "DBPWD=$env:DBPWD_DEV" >> .env.dev
+          Write-Output "SQL_PORT=1401" >> .env.dev
+          Write-Output "APP_PORT=5001" >> .env.dev
+          Write-Output "FLASK_ENV=dev" >> .env.dev
       
       - name: Verify Secret Access
         run: |
-          if (${{ secrets.SQL_SERVER_DEV }}) {
-            echo "Secret is set and has length: $(${ { secrets.SQL_SERVER_DEV } }.Length)"
+          if ($env:SQL_SERVER_DEV) {
+            Write-Output "Secret is set and has length: $($env:SQL_SERVER_DEV.Length)"
           } else {
-            echo "Secret is not set."
+            Write-Output "Secret is not set."
           }
 
       - name: Start Dev Environment with Docker Compose
         env:
           ENV_FILE: .env.dev
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} -p dev up --build -d
+          docker-compose -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
           docker ps -a
 
       - name: Execute DB Scripts for Dev
         env:
           ENV_FILE: .env.dev
-          SQL_SERVER: ${{ env.SQL_SERVER }}
-          DATABASE: ${{ env.DATABASE }}
-          DBUID: ${{ env.DBUID }}
-          DBPWD: ${{ env.DBPWD }}
-          SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
-          SQL_PORT: ${{ env.SQL_PORT }}
+          SQL_SERVER: $env:SQL_SERVER_DEV
+          DATABASE: $env:DATABASE_DEV
+          DBUID: $env:DBUID_DEV
+          DBPWD: $env:DBPWD_DEV
+          SPRINT_FOLDER: $env:SPRINT_FOLDER
+          SQL_PORT: 1401
         run: |
           docker exec -i dev_sqlserver powershell -Command "
             foreach ($file in Get-ChildItem -Path 'C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql') {
               $SCRIPT_NAME = $file.Name
-              $EXISTS = sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
+              $EXISTS = sqlcmd -S $env:SQL_SERVER,$SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
               if ($EXISTS -eq 0) {
-                echo 'Executing $SCRIPT_NAME...'
-                sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -i $file.FullName
+                Write-Output 'Executing $SCRIPT_NAME...'
+                sqlcmd -S $env:SQL_SERVER,$SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -i $file.FullName
                 if ($?) {
-                  sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
+                  sqlcmd -S $env:SQL_SERVER,$SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
                 } else {
-                  sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
+                  sqlcmd -S $env:SQL_SERVER,$SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
                   exit 1
                 }
               } else {
-                echo 'Skipping already executed script: $SCRIPT_NAME'
+                Write-Output 'Skipping already executed script: $SCRIPT_NAME'
               }
             }
           "
@@ -96,50 +96,51 @@ jobs:
       - name: Extract Sprint Folder from Branch Name
         id: sprint
         run: |
-          $BRANCH_NAME = ${GITHUB_REF.Split('/')[-1]}
+          $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
           $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
-          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+          Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
 
       - name: Generate .env.qa for Docker Compose
         run: |
-          echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
-          echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
-          echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
-          echo "DBPWD=${{ secrets.DBPWD_QA }}" >> .env.qa
-          echo "SQL_PORT=1402" >> .env.qa
-          echo "APP_PORT=5002" >> .env.qa
-          echo "FLASK_ENV=qa" >> .env.qa
+          Write-Output "SQL_SERVER=$env:SQL_SERVER_QA" > .env.qa
+          Write-Output "DATABASE=$env:DATABASE_QA" >> .env.qa
+          Write-Output "DBUID=$env:DBUID_QA" >> .env.qa
+          Write-Output "DBPWD=$env:DBPWD_QA" >> .env.qa
+          Write-Output "SQL_PORT=1402" >> .env.qa
+          Write-Output "APP_PORT=5002" >> .env.qa
+          Write-Output "FLASK_ENV=qa" >> .env.qa
       
       - name: Start QA Environment with Docker Compose
         env:
           ENV_FILE: .env.qa
         run: |
-          docker-compose -f docker-compose.yml --env-file ${ENV_FILE} -p qa up --build -d
+          docker-compose -f docker-compose.yml --env-file $ENV_FILE -p qa up --build -d
 
       - name: Execute DB Scripts for QA
         env:
           ENV_FILE: .env.qa
-          SQL_SERVER: ${{ env.SQL_SERVER }}
-          DATABASE: ${{ env.DATABASE }}
-          DBUID: ${{ env.DBUID }}
-          DBPWD: ${{ env.DBPWD }}
-          SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
+          SQL_SERVER: $env:SQL_SERVER_QA
+          DATABASE: $env:DATABASE_QA
+          DBUID: $env:DBUID_QA
+          DBPWD: $env:DBPWD_QA
+          SPRINT_FOLDER: $env:SPRINT_FOLDER
+          SQL_PORT: 1402
         run: |
           docker exec -i qa_sqlserver powershell -Command "
             foreach ($file in Get-ChildItem -Path 'C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql') {
               $SCRIPT_NAME = $file.Name
-              $EXISTS = sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
+              $EXISTS = sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
               if ($EXISTS -eq 0) {
-                echo 'Executing $SCRIPT_NAME...'
-                sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -i $file.FullName
+                Write-Output 'Executing $SCRIPT_NAME...'
+                sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -i $file.FullName
                 if ($?) {
-                  sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
+                  sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
                 } else {
-                  sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
+                  sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
                   exit 1
                 }
               } else {
-                echo 'Skipping already executed script: $SCRIPT_NAME'
+                Write-Output 'Skipping already executed script: $SCRIPT_NAME'
               }
             }
           "
