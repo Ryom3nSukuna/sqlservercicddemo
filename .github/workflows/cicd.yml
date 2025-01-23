@@ -46,14 +46,24 @@ jobs:
             } else {
             Write-Output "Secret is not set."
             }
-
+        
+      - name: Debug .env.dev File Path
+        run: |
+            Write-Output "ENV_FILE=$ENV_FILE"
+            if (Test-Path $ENV_FILE) {
+            Write-Output "ENV_FILE exists and is accessible."
+            } else {
+            Write-Output "ENV_FILE is missing or inaccessible."
+            }
+        shell: powershell  
+      
       - name: Start Dev Environment with Docker Compose
         env:
-          ENV_FILE: .env.dev
+            ENV_FILE: .env.dev
         run: |
-          docker-compose -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
-          docker ps -a
-        shell: cmd
+            docker-compose --compatibility -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
+            docker ps -a
+        shell: powershell
 
       - name: Execute DB Scripts for Dev
         env:
