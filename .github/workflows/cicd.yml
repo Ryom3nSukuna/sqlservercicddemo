@@ -95,21 +95,16 @@ jobs:
         run: echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
       
       - name: Execute DB Scripts for Dev
-        env:
-            VSPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
-            VDBUID: ${{ secrets.DBUID_DEV }}
-            VDBPWD: ${{ secrets.DBPWD_DEV }}
-            VDATABASE: ${{ secrets.DATABASE_DEV }}
         run: |
             docker exec -i dev_sqlserver bash -c "
-                echo 'Starting execution of SQL scripts in Sprint Folder: ${VSPRINT_FOLDER}...' &&
+                echo 'Starting execution of SQL scripts in Sprint Folder: ${{ env.SPRINT_FOLDER }}...' &&
                 cd /var/opt/sqlserver/db &&
                 chmod +x execute-sql-scripts.sh &&
                 ./execute-sql-scripts.sh \
-                    ISPRINT_FOLDER='${VSPRINT_FOLDER}' \
-                    IDBUID='${VDBUID}' \
-                    IDBPWD='${VDBPWD}' \
-                    IDATABASE='${VDATABASE}'
+                    ISPRINT_FOLDER='${{ env.SPRINT_FOLDER }}' \
+                    IDBUID='${{ secrets.DBUID_DEV }}' \
+                    IDBPWD='${{ secrets.DBPWD_DEV }}' \
+                    IDATABASE='${{ secrets.DATABASE_DEV }}'
             "
 
 
