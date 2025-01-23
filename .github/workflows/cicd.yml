@@ -104,7 +104,7 @@ jobs:
             '
             "@
             ) -NoNewWindow -Wait -Verb RunAs
-        shell: powershell
+        shell: powershell #unix decoding added
 
 
 
