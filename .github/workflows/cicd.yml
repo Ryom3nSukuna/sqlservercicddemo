@@ -97,17 +97,16 @@ jobs:
       - name: Execute DB Scripts for Dev
         run: |
             docker exec -i \
-                --env SQL_SERVER=${{ env.SQL_SERVER_DEV }} \
-                --env DATABASE=${{ env.DATABASE_DEV }} \
-                --env DBUID=${{ env.DBUID_DEV }} \
-                --env DBPWD=${{ env.DBPWD_DEV }} \
-                --env SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} \
-                dev_sqlserver bash -c "
-                    echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...' &&
-                    cd /var/opt/sqlserver/db &&
-                    chmod +x execute-sql-scripts.sh &&
-                    ./execute-sql-scripts.sh SPRINT_FOLDER=${SPRINT_FOLDER} DBUID=${DBUID} DBPWD=${DBPWD} DATABASE=${DATABASE}
-                "
+            --env DATABASE=${{ secrets.DATABASE_DEV }} \
+            --env DBUID=${{ secrets.DBUID_DEV }} \
+            --env DBPWD=${{ secrets.DBPWD_DEV }} \
+            --env SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} \
+            dev_sqlserver bash -c "
+                echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...' &&
+                cd /var/opt/sqlserver/db &&
+                chmod +x execute-sql-scripts.sh &&
+                ./execute-sql-scripts.sh SPRINT_FOLDER=${SPRINT_FOLDER} DBUID=${DBUID} DBPWD=${DBPWD} DATABASE=${DATABASE}
+            "
 
   cd_qa:
     name: Deploy to QA with Approval
