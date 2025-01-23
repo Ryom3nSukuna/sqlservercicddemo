@@ -80,7 +80,7 @@ jobs:
       
       - name: Convert Line Endings to Unix
         run: |
-            sed -i 's/\r$//' run-sqlserver.sh
+            dos2unix run-sqlserver.sh
       
       - name: Start Dev Environment with Docker Compose
         env:
