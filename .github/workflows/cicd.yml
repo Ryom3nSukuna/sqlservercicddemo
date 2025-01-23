@@ -78,10 +78,11 @@ jobs:
             type .env.dev
         shell: cmd
       
-      - name: Convert Line Endings to Unix
+      - name: Convert Line Endings to Windows Format
         shell: powershell
         run: |
-            (Get-Content run-sqlserver.sh) -replace "`r", "" | Set-Content run-sqlserver.sh
+            (Get-Content run-sqlserver.sh) | Out-File -FilePath run-sqlserver.sh -Encoding Ascii
+
       
       - name: Start Dev Environment with Docker Compose
         env:
