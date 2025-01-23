@@ -68,6 +68,11 @@ jobs:
             docker info
         shell: cmd # fixed runner let's see
       
+      - name: Debug .env.dev File
+        run: |
+            type .env.dev
+        shell: cmd
+      
       - name: Start Dev Environment with Docker Compose
         env:
             ENV_FILE: .env.dev
