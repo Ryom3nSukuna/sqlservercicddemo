@@ -29,13 +29,17 @@ jobs:
       
       - name: Generate .env.dev for Docker Compose
         run: |
-          Write-Output "SQL_SERVER=$env:SQL_SERVER_DEV" > .env.dev
-          Write-Output "DATABASE=$env:DATABASE_DEV" >> .env.dev
-          Write-Output "DBUID=$env:DBUID_DEV" >> .env.dev
-          Write-Output "DBPWD=$env:DBPWD_DEV" >> .env.dev
-          Write-Output "SQL_PORT=1401" >> .env.dev
-          Write-Output "APP_PORT=5001" >> .env.dev
-          Write-Output "FLASK_ENV=dev" >> .env.dev
+            $content = @"
+            SQL_SERVER=$env:SQL_SERVER_DEV
+            DATABASE=$env:DATABASE_DEV
+            DBUID=$env:DBUID_DEV
+            DBPWD=$env:DBPWD_DEV
+            SQL_PORT=1401
+            APP_PORT=5001
+            FLASK_ENV=dev
+            "@
+            $content | Out-File -FilePath .env.dev -Encoding utf8 -NoNewline
+        shell: powershell
       
       - name: Verify Secret Access
         env:
