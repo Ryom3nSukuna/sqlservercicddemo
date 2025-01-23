@@ -38,12 +38,14 @@ jobs:
           Write-Output "FLASK_ENV=dev" >> .env.dev
       
       - name: Verify Secret Access
+        env:
+            SQL_SERVER_DEV: ${{ secrets.SQL_SERVER_DEV }}
         run: |
-          if ($env:SQL_SERVER_DEV) {
+            if ($env:SQL_SERVER_DEV) {
             Write-Output "Secret is set and has length: $($env:SQL_SERVER_DEV.Length)"
-          } else {
+            } else {
             Write-Output "Secret is not set."
-          }
+            }
 
       - name: Start Dev Environment with Docker Compose
         env:
