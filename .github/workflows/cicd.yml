@@ -59,10 +59,9 @@ jobs:
         shell: powershell 
       
       - name: Start Dev Environment with Docker Compose
-        env:
-            ENV_FILE: .env.dev
         run: |
-            docker-compose --compatibility -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
+            $ENV_FILE = ".env.dev"
+            docker-compose -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
             docker ps -a
         shell: powershell
 
