@@ -7,7 +7,7 @@ DATABASE=$4
 
 echo "Starting SQL script execution in Sprint Folder: $SPRINT_FOLDER"
 
-for file in /var/opt/mssql/db/${SPRINT_FOLDER}/Exec/*.sql; do
+for file in /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec/*.sql; do
     SCRIPT_NAME=$(basename $file)
     echo "Checking if $SCRIPT_NAME has already been executed..."
 
