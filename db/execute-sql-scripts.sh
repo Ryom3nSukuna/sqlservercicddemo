@@ -6,11 +6,11 @@ do
     eval "$arg"
 done
 
-echo "Executing SQL scripts in Sprint Folder: $SPRINT_FOLDER..."
-echo "Connecting to database $DATABASE with user $DBUID."
+echo "Executing SQL scripts in Sprint Folder: "$SPRINT_FOLDER"..."
+echo "Connecting to database $DATABASE with user "$DBUID"."
 
 # Navigate to the correct directory
-cd /var/opt/sqlserver/db/$SPRINT_FOLDER/Exec || exit
+cd /var/opt/sqlserver/db/"$SPRINT_FOLDER"/Exec || exit
 
 # Iterate over .sql files and execute
 for sql_file in *.sql; do
