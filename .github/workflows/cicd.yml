@@ -86,7 +86,7 @@ jobs:
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
         shell: cmd #see what is happening...
         
-      - name: Execute DB Scripts for Dev # unix format again test after lf change
+      - name: Execute DB Scripts for Dev # unix format again test after lf
         env:
             ENV_FILE: .env.dev
             SQL_SERVER: ${{ env.SQL_SERVER_DEV }}
