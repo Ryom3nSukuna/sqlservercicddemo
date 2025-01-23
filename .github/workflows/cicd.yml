@@ -40,6 +40,7 @@ jobs:
             echo SQL_PORT=1401 >> .env.dev
             echo APP_PORT=5001 >> .env.dev
             echo FLASK_ENV=dev >> .env.dev
+            echo SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} >> .env.dev
         shell: cmd
       
       - name: Debug Secrets
@@ -93,24 +94,30 @@ jobs:
       - name: Debug Sprint Folder in Execute Scripts Step
         run: echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
       
+      - name: Debug Variables in Container
+        run: |
+            docker exec -i dev_sqlserver bash -c "
+                source /var/opt/sqlserver/db/.env.dev &&
+                echo 'SPRINT_FOLDER: $SPRINT_FOLDER' &&
+                echo 'DATABASE: $DATABASE' &&
+                echo 'DBUID: $DBUID' &&
+                echo 'DBPWD: $DBPWD'
+            "
+        shell: bash
+      
       - name: Execute DB Scripts for Dev
         env:
-            SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
             ENV_FILE: .env.dev
-            SQL_SERVER: ${{ env.SQL_SERVER_DEV }}
-            DATABASE: ${{ env.DATABASE_DEV }}
-            DBUID: ${{ env.DBUID_DEV }}
-            DBPWD: ${{ env.DBPWD_DEV }}
-            SQL_PORT: 1401
         run: |
-            echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
             docker exec -i dev_sqlserver bash -c "
-                echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...'
-                cd /var/opt/sqlserver/db &&
-                chmod +x execute-sql-scripts.sh &&
-                ./execute-sql-scripts.sh ${SPRINT_FOLDER} ${DBUID} ${DBPWD} ${DATABASE}
+                source /var/opt/sqlserver/db/.env.dev &&
+                echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...' &&
+                cd /var/opt/sqlserver/db && \
+                chmod +x execute-sql-scripts.sh && \
+                ./execute-sql-scripts.sh
                 echo 'SQL script execution completed.'
             "
+        shell: bash
 
   cd_qa:
     name: Deploy to QA with Approval
