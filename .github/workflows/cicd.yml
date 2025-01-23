@@ -63,10 +63,12 @@ jobs:
         shell: powershell 
       
       - name: Start Dev Environment with Docker Compose
+        env:
+            ENV_FILE: .env.dev
+            SQL_SERVER: ${{ secrets.SQL_SERVER_DEV }}
         run: |
-            $ENV_FILE = ".env.dev"
-            docker-compose -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
-            docker ps -a
+            Write-Output "SQL_SERVER=$env:SQL_SERVER"
+            docker-compose -f docker-compose.yml --env-file $env:ENV_FILE -p dev up --build -d
         shell: powershell
 
       - name: Execute DB Scripts for Dev
