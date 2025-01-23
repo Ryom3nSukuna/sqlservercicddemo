@@ -26,10 +26,6 @@ jobs:
           $BRANCH_NAME = ${GITHUB_REF.Split('/')[-1]}
           $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
           echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
-
-      - name: Install Docker Compose
-        run: |
-          choco install docker-compose
       
       - name: Generate .env.dev for Docker Compose
         run: |
