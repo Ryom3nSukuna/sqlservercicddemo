@@ -104,7 +104,7 @@ jobs:
                 DBUID=${{ secrets.DBUID_DEV }} \
                 DBPWD=${{ secrets.DBPWD_DEV }} \
                 DATABASE=${{ secrets.DATABASE_DEV }} \
-                ./execute-sql-scripts.sh
+                ./execute-sql-scripts.sh SPRINT_FOLDER=${SPRINT_FOLDER} DBUID=${DBUID} DBPWD=${DBPWD} DATABASE=${DATABASE}
             "
 
   cd_qa:
