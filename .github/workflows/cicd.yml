@@ -48,16 +48,15 @@ jobs:
             }
         
       - name: Debug .env.dev File Path
-        env:
-            ENV_FILE: .env.dev
         run: |
+            $ENV_FILE = ".env.dev"
             Write-Output "ENV_FILE=$ENV_FILE"
             if (Test-Path $ENV_FILE) {
             Write-Output "ENV_FILE exists and is accessible."
             } else {
             Write-Output "ENV_FILE is missing or inaccessible."
             }
-        shell: powershell  
+        shell: powershell 
       
       - name: Start Dev Environment with Docker Compose
         env:
