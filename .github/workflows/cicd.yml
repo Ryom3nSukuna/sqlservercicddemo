@@ -96,20 +96,19 @@ jobs:
       
       - name: Debug Variables in Container
         run: |
-            docker exec -i dev_sqlserver bash -c "
+            docker exec -it dev_sqlserver bash -c "
                 source /var/opt/sqlserver/db/.env.dev &&
                 echo 'SPRINT_FOLDER: $SPRINT_FOLDER' &&
                 echo 'DATABASE: $DATABASE' &&
                 echo 'DBUID: $DBUID' &&
                 echo 'DBPWD: $DBPWD'
             "
-        shell: bash
       
       - name: Execute DB Scripts for Dev
         env:
             ENV_FILE: .env.dev
         run: |
-            docker exec -i dev_sqlserver bash -c "
+            docker exec -it dev_sqlserver bash -c "
                 source /var/opt/sqlserver/db/.env.dev &&
                 echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...' &&
                 cd /var/opt/sqlserver/db && \
@@ -117,7 +116,6 @@ jobs:
                 ./execute-sql-scripts.sh
                 echo 'SQL script execution completed.'
             "
-        shell: bash
 
   cd_qa:
     name: Deploy to QA with Approval
