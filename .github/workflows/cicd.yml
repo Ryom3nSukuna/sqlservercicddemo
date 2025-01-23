@@ -78,6 +78,10 @@ jobs:
             type .env.dev
         shell: cmd
       
+      - name: Convert Line Endings to Unix
+        run: |
+            sed -i 's/\r$//' run-sqlserver.sh
+      
       - name: Start Dev Environment with Docker Compose
         env:
             ENV_FILE: .env.dev
