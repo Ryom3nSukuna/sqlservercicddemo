@@ -96,10 +96,21 @@ jobs:
             SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
         run: |
             docker exec -i dev_sqlserver /bin/bash -c "
-            chmod +x /var/opt/sqlserver/db/execute-sql-scripts.sh && \
-            /var/opt/sqlserver/db/execute-sql-scripts.sh $SPRINT_FOLDER $DBUID $DBPWD $DATABASE
+            echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...'
+        
+            # Navigate to the directory where the script is stored
+            cd /var/opt/sqlserver/db/${SPRINT_FOLDER}
+        
+            # Make sure the SQL execution script has correct permissions
+            chmod +x execute-sql-scripts.sh
+        
+            # Execute the SQL script file
+            ./execute-sql-scripts.sh
+        
+            echo 'SQL script execution completed.'
             "
-        shell: bash
+        shell: cmd
+
 
 
   cd_qa:
