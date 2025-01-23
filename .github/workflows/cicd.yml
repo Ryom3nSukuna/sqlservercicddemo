@@ -48,6 +48,8 @@ jobs:
             }
         
       - name: Debug .env.dev File Path
+        env:
+            ENV_FILE: .env.dev
         run: |
             Write-Output "ENV_FILE=$ENV_FILE"
             if (Test-Path $ENV_FILE) {
