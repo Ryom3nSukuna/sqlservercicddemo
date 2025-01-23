@@ -79,30 +79,33 @@ jobs:
             DATABASE: ${{ secrets.DATABASE_DEV }}
             DBUID: ${{ secrets.DBUID_DEV }}
             DBPWD: ${{ secrets.DBPWD_DEV }}
-            SPRINT_FOLDER: ${{ secrets.SPRINT_FOLDER }}
             SQL_PORT: 1401
         run: |
-            Start-Process -FilePath "powershell.exe" -ArgumentList @"
+            Start-Process -FilePath "powershell.exe" -ArgumentList @(
+            "-Command",
+            @"
             docker exec -i dev_sqlserver powershell -Command '
-                foreach ($file in Get-ChildItem -Path "C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql") {
-                $SCRIPT_NAME = $file.Name
-                $EXISTS = sqlcmd -S $env:SQL_SERVER,$SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q "SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''" -h -1
-                if ($EXISTS -eq 0) {
-                    Write-Output "Executing $SCRIPT_NAME..."
-                    sqlcmd -S localhost -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -i $file.FullName
-                    if ($?) {
-                    sqlcmd -S localhost -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')"
+                foreach (\$file in Get-ChildItem -Path \"C:/var/opt/sqlserver/db/$env:SPRINT_FOLDER/Exec/*.sql\") {
+                \$SCRIPT_NAME = \$file.Name
+                \$EXISTS = sqlcmd -S $env:SQL_SERVER,$env:SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''\$SCRIPT_NAME''\" -h -1
+                if (\$EXISTS -eq 0) {
+                    Write-Output \"Executing \$SCRIPT_NAME...\"
+                    sqlcmd -S $env:SQL_SERVER,$env:SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -i \$file.FullName
+                    if (\$?) {
+                    sqlcmd -S $env:SQL_SERVER,$env:SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''\$SCRIPT_NAME'', ''Success'')\"
                     } else {
-                    sqlcmd -S localhost -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')"
+                    sqlcmd -S $env:SQL_SERVER,$env:SQL_PORT -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''\$SCRIPT_NAME'', ''Failure'')\"
                     exit 1
                     }
                 } else {
-                    Write-Output "Skipping already executed script: $SCRIPT_NAME"
+                    Write-Output \"Skipping already executed script: \$SCRIPT_NAME\"
                 }
                 }
             '
-            "@ -NoNewWindow -Wait -Verb RunAs
+            "@
+            ) -NoNewWindow -Wait -Verb RunAs
         shell: powershell
+
 
 
   cd_qa:
