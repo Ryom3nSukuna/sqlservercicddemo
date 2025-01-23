@@ -106,6 +106,7 @@ jobs:
             chmod +x execute-sql-scripts.sh &&
             ./execute-sql-scripts.sh
             "
+        shell: bash
 
 
   cd_qa:
