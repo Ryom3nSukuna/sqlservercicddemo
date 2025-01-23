@@ -23,34 +23,32 @@ jobs:
       - name: Extract Sprint Folder from Branch Name
         id: sprint
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          SPRINT_FOLDER=$(echo $BRANCH_NAME | sed 's/feature\///')
-          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $GITHUB_ENV
+          $BRANCH_NAME = ${GITHUB_REF.Split('/')[-1]}
+          $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
+          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
 
       - name: Install Docker Compose
-        run: sudo apt-get update && sudo apt-get install -y docker-compose
-
-      - name: Get Public IP
-        run: curl http://checkip.amazonaws.com
+        run: |
+          choco install docker-compose
       
       - name: Generate .env.dev for Docker Compose
         run: |
-            echo "SQL_SERVER=${{ secrets.SQL_SERVER_DEV }}" > .env.dev
-            echo "DATABASE=${{ secrets.DATABASE_DEV }}" >> .env.dev
-            echo "DBUID=${{ secrets.DBUID_DEV }}" >> .env.dev
-            echo "DBPWD=${{ secrets.DBPWD_DEV }}" >> .env.dev
-            echo "SQL_PORT=1401" >> .env.dev
-            echo "APP_PORT=5001" >> .env.dev
-            echo "FLASK_ENV=dev" >> .env.dev
+          echo "SQL_SERVER=${{ secrets.SQL_SERVER_DEV }}" > .env.dev
+          echo "DATABASE=${{ secrets.DATABASE_DEV }}" >> .env.dev
+          echo "DBUID=${{ secrets.DBUID_DEV }}" >> .env.dev
+          echo "DBPWD=${{ secrets.DBPWD_DEV }}" >> .env.dev
+          echo "SQL_PORT=1401" >> .env.dev
+          echo "APP_PORT=5001" >> .env.dev
+          echo "FLASK_ENV=dev" >> .env.dev
       
       - name: Verify Secret Access
         run: |
-            if [ -n "${{ secrets.SQL_SERVER_DEV }}" ]; then
-                echo "Secret is set and has length: ${#${{ secrets.SQL_SERVER_DEV }}}"
-            else
-                echo "Secret is not set."
-            fi
-      
+          if (${{ secrets.SQL_SERVER_DEV }}) {
+            echo "Secret is set and has length: $(${ { secrets.SQL_SERVER_DEV } }.Length)"
+          } else {
+            echo "Secret is not set."
+          }
+
       - name: Start Dev Environment with Docker Compose
         env:
           ENV_FILE: .env.dev
@@ -68,28 +66,28 @@ jobs:
           SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
           SQL_PORT: ${{ env.SQL_PORT }}
         run: |
-          docker exec -i dev_sqlserver /bin/bash -c "
-            for file in /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec/*.sql; do
-              SCRIPT_NAME=\$(basename \"\$file\")
-              EXISTS=\$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '\$SCRIPT_NAME'\" -h -1)
-              if [ \"\$EXISTS\" -eq 0 ]; then
-                echo \"Executing \$SCRIPT_NAME...\"
-                /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -i \"\$file\"
-                if [ \$? -eq 0 ]; then
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Success')\"
-                else
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Failure')\"
+          docker exec -i dev_sqlserver powershell -Command "
+            foreach ($file in Get-ChildItem -Path 'C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql') {
+              $SCRIPT_NAME = $file.Name
+              $EXISTS = sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
+              if ($EXISTS -eq 0) {
+                echo 'Executing $SCRIPT_NAME...'
+                sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -i $file.FullName
+                if ($?) {
+                  sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
+                } else {
+                  sqlcmd -S $SQL_SERVER,$SQL_PORT -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
                   exit 1
-                fi
-              else
-                echo \"Skipping already executed script: \$SCRIPT_NAME\"
-              fi
-            done
+                }
+              } else {
+                echo 'Skipping already executed script: $SCRIPT_NAME'
+              }
+            }
           "
 
   cd_qa:
     name: Deploy to QA with Approval
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: ci_dev
     if: github.ref == 'refs/heads/develop'
     environment:
@@ -102,19 +100,19 @@ jobs:
       - name: Extract Sprint Folder from Branch Name
         id: sprint
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          SPRINT_FOLDER=$(echo $BRANCH_NAME | sed 's/feature\///')
-          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $GITHUB_ENV
+          $BRANCH_NAME = ${GITHUB_REF.Split('/')[-1]}
+          $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
+          echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
 
       - name: Generate .env.qa for Docker Compose
         run: |
-            echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
-            echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
-            echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
-            echo "DBPWD=${{ secrets.DBPWD_QA }}" >> .env.qa
-            echo "SQL_PORT=1402" >> .env.qa
-            echo "APP_PORT=5002" >> .env.qa
-            echo "FLASK_ENV=qa" >> .env.qa
+          echo "SQL_SERVER=${{ secrets.SQL_SERVER_QA }}" > .env.qa
+          echo "DATABASE=${{ secrets.DATABASE_QA }}" >> .env.qa
+          echo "DBUID=${{ secrets.DBUID_QA }}" >> .env.qa
+          echo "DBPWD=${{ secrets.DBPWD_QA }}" >> .env.qa
+          echo "SQL_PORT=1402" >> .env.qa
+          echo "APP_PORT=5002" >> .env.qa
+          echo "FLASK_ENV=qa" >> .env.qa
       
       - name: Start QA Environment with Docker Compose
         env:
@@ -131,23 +129,23 @@ jobs:
           DBPWD: ${{ env.DBPWD }}
           SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
         run: |
-          docker exec -i qa_sqlserver /bin/bash -c "
-            for file in /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec/*.sql; do
-              SCRIPT_NAME=\$(basename \"\$file\")
-              EXISTS=\$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '\$SCRIPT_NAME'\" -h -1)
-              if [ \"\$EXISTS\" -eq 0 ]; then
-                echo \"Executing \$SCRIPT_NAME...\"
-                /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -i \"\$file\"
-                if [ \$? -eq 0 ]; then
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Success')\"
-                else
-                  /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Failure')\"
+          docker exec -i qa_sqlserver powershell -Command "
+            foreach ($file in Get-ChildItem -Path 'C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql') {
+              $SCRIPT_NAME = $file.Name
+              $EXISTS = sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
+              if ($EXISTS -eq 0) {
+                echo 'Executing $SCRIPT_NAME...'
+                sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -i $file.FullName
+                if ($?) {
+                  sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
+                } else {
+                  sqlcmd -S $SQL_SERVER -U $DBUID -P $DBPWD -d $DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
                   exit 1
-                fi
-              else
-                echo \"Skipping already executed script: \$SCRIPT_NAME\"
-              fi
-            done
+                }
+              } else {
+                echo 'Skipping already executed script: $SCRIPT_NAME'
+              }
+            }
           "
 
       - name: Approval Required for QA Deployment
