@@ -95,7 +95,7 @@ jobs:
             DBPWD: ${{ env.DBPWD_DEV }}
             SPRINT_FOLDER: ${{ env.SPRINT_FOLDER }}
         run: |
-            docker exec -it dev_sqlserver bash -c "
+            docker exec -i dev_sqlserver sh -c "
                 echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...'
             
                 # Navigate to the directory where the script is stored
