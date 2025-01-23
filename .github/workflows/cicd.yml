@@ -81,6 +81,7 @@ jobs:
       - name: Convert Line Endings to Unix
         run: |
             dos2unix run-sqlserver.sh
+        shell: cmd
       
       - name: Start Dev Environment with Docker Compose
         env:
