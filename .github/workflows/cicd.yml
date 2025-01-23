@@ -96,15 +96,16 @@ jobs:
       
       - name: Execute DB Scripts for Dev
         run: |
-            docker exec -i dev_sqlserver bash -c "
-                echo 'Starting execution of SQL scripts in Sprint Folder: ${{ env.SPRINT_FOLDER }}...' &&
+            docker exec -i \
+            -e SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} \
+            -e DBUID=${{ secrets.DBUID_DEV }} \
+            -e DBPWD=${{ secrets.DBPWD_DEV }} \
+            -e DATABASE=${{ secrets.DATABASE_DEV }} \
+            dev_sqlserver bash -c "
+                echo 'Starting execution of SQL scripts in Sprint Folder: $SPRINT_FOLDER...' &&
                 cd /var/opt/sqlserver/db &&
                 chmod +x execute-sql-scripts.sh &&
-                ./execute-sql-scripts.sh \
-                    SPRINT_FOLDER='${{ env.SPRINT_FOLDER }}' \
-                    DBUID='${{ secrets.DBUID_DEV }}' \
-                    DBPWD='${{ secrets.DBPWD_DEV }}' \
-                    DATABASE='${{ secrets.DATABASE_DEV }}'
+                ./execute-sql-scripts.sh
             "
 
 
