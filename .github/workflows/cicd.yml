@@ -44,7 +44,7 @@ jobs:
             echo DATABASE_DEV=${{ secrets.DATABASE_DEV }}
             echo DBUID_DEV=${{ secrets.DBUID_DEV }}
             echo DBPWD_DEV=${{ secrets.DBPWD_DEV }}
-        shell: bash
+        shell: cmd
       
       - name: Verify Secret Access
         env:
