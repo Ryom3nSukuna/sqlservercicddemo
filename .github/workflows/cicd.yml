@@ -72,7 +72,7 @@ jobs:
             "
         shell: cmd #what happened?
         
--       name: Execute DB Scripts for Dev
+      - name: Execute DB Scripts for Dev
         env:
             ENV_FILE: .env.dev
             SQL_SERVER: ${{ secrets.SQL_SERVER_DEV }}
