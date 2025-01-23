@@ -29,8 +29,3 @@ echo "INIT_COMPLETED" > /var/shared/init_completed.txt
 
 # Wait for SQL Server process to finish
 wait
-
-/opt/mssql/bin/mssql-conf set network.tcpport 1433
-/opt/mssql/bin/mssql-conf set network.tcpenabled 1
-/opt/mssql/bin/mssql-conf set sqlagent.enabled true
-systemctl restart mssql-server
