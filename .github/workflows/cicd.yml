@@ -53,6 +53,7 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml --env-file $ENV_FILE -p dev up --build -d
           docker ps -a
+        shell: cmd
 
       - name: Execute DB Scripts for Dev
         env:
