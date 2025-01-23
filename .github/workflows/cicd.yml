@@ -90,6 +90,9 @@ jobs:
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
         shell: cmd #see what is happening...
         
+      - name: Debug Sprint Folder in Execute Scripts Step
+        run: echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
+      
       - name: Execute DB Scripts for Dev
         env:
             ENV_FILE: .env.dev
