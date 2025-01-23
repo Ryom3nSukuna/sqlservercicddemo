@@ -103,6 +103,7 @@ jobs:
             DBPWD: ${{ env.DBPWD_DEV }}
             SQL_PORT: 1401
         run: |
+            echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
             docker exec -i dev_sqlserver bash -c "
                 echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...'
                 cd /var/opt/sqlserver/db &&
