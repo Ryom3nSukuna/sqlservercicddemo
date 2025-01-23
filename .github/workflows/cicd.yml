@@ -94,24 +94,19 @@ jobs:
             DBUID: ${{ secrets.DBUID_DEV }}
             DBPWD: ${{ secrets.DBPWD_DEV }}
         run: |
-            cmd.exe /c "
-            docker exec -i dev_sqlserver cmd.exe /c ^
-            for %f in (C:\\var\\opt\\sqlserver\\db\\%SPRINT_FOLDER%\\Exec\\*.sql) do ^
-            (
-                echo Processing %f &&
-                set SCRIPT_NAME=%~nxf &&
-                docker exec -i dev_sqlserver sqlcmd -S localhost -U %DBUID% -P %DBPWD% -d %DATABASE% -i %f &&
-                docker exec -i dev_sqlserver sqlcmd -S localhost -U %DBUID% -P %DBPWD% -d %DATABASE% -Q ^
-                "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('%SCRIPT_NAME%', 'Success')" ||
-                (
-                echo Error occurred while executing %f &&
-                docker exec -i dev_sqlserver sqlcmd -S localhost -U %DBUID% -P %DBPWD% -d %DATABASE% -Q ^
-                "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('%SCRIPT_NAME%', 'Failure')" &&
-                exit 1
-                )
-            )
+            docker exec -i dev_sqlserver /bin/bash -c "
+            for file in /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec/*.sql; do
+                SCRIPT_NAME=\$(basename \$file)
+                EXISTS=\$(sqlcmd -S localhost -U $DBUID -P $DBPWD -d $DATABASE -Q \"SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '\$SCRIPT_NAME'\")
+                if [ \$EXISTS -eq 0 ]; then
+                echo 'Executing \$SCRIPT_NAME...'
+                sqlcmd -S localhost -U $DBUID -P $DBPWD -d $DATABASE -i \$file && \
+                sqlcmd -S localhost -U $DBUID -P $DBPWD -d $DATABASE -Q \"INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('\$SCRIPT_NAME', 'Success')\"
+                else
+                echo 'Skipping already executed script: \$SCRIPT_NAME'
+                fi
+            done
             "
-        shell: cmd
 
 
 
