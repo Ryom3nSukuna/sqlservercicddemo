@@ -119,7 +119,7 @@ jobs:
                 fi
             done
             "
-        shell: bash
+        shell: cmd
 
 
   cd_qa:
