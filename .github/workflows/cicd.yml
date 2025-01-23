@@ -79,9 +79,9 @@ jobs:
         shell: cmd
       
       - name: Convert Line Endings to Unix
+        shell: powershell
         run: |
-            dos2unix run-sqlserver.sh
-        shell: cmd
+            (Get-Content run-sqlserver.sh) -replace "`r", "" | Set-Content run-sqlserver.sh
       
       - name: Start Dev Environment with Docker Compose
         env:
