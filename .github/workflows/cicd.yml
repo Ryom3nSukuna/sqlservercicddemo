@@ -27,7 +27,7 @@ jobs:
           $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
           echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
 
-      - name: Install Docker Compose # Choco is now installed
+      - name: Install Docker Compose
         run: |
           choco install docker-compose
       
