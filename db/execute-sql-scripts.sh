@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Print received variables for debugging
+echo "SPRINT_FOLDER=${SPRINT_FOLDER}"
+echo "DATABASE=${DATABASE}"
+echo "DBUID=${DBUID}"
+echo "DBPWD=${DBPWD}"
+
 echo "Executing SQL scripts in Sprint Folder: ${SPRINT_FOLDER}..."
 echo "Connecting to database ${DATABASE} with user ${DBUID}."
 
