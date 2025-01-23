@@ -66,7 +66,7 @@ jobs:
         run: |
             docker ps
             docker info
-        shell: bash # fixed runner let's see
+        shell: cmd # fixed runner let's see
       
       - name: Start Dev Environment with Docker Compose
         env:
