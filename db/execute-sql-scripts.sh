@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash lf
 
 SPRINT_FOLDER=$1
 DBUID=$2
