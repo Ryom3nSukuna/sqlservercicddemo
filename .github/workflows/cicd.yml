@@ -109,7 +109,6 @@ jobs:
             
                 echo 'SQL script execution completed.'
             "
-        shell: cmd
 
 
 
