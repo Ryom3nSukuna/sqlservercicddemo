@@ -99,12 +99,12 @@ jobs:
     environment: qa
     steps:
     
-        - name: Require Manual Approval
-          uses: hmarr/auto-approve-action@v2
-          with:
-              github-token: ${{ secrets.GITHUB_TOKEN }}
-              environment: qa
-          wait-for-approval: true
+      - name: Require Manual Approval
+        uses: hmarr/auto-approve-action@v2
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            environment: qa
+        wait-for-approval: true
       
       - name: Checkout Code
         uses: actions/checkout@v3
