@@ -15,6 +15,7 @@ jobs:
   ci_dev:
     name: Continuous Integration for Dev
     runs-on: self-hosted
+    if: startsWith(github.ref, 'refs/heads/feature/')
     environment: dev
     steps:
       - name: Checkout Code
