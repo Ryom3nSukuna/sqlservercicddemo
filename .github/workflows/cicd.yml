@@ -98,18 +98,33 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     environment: qa
     steps:
+    
+        - name: Require Manual Approval
+          uses: hmarr/auto-approve-action@v2
+          with:
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              environment: qa
+          wait-for-approval: true
+      
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Extract Sprint Folder from Branch Name
+      - name: Extract Sprint Folder from Merge Commit
         id: sprint
-        shell: powershell
+        shell: bash
         run: |
-            $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
-            Write-Host "Branch Name: $BRANCH_NAME"
-            $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
-            Write-Host "Sprint Folder: $SPRINT_FOLDER"
-            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+            # Get the last merge commit message
+            COMMIT_MSG=$(git log -1 --merges --pretty=%B)
+            echo "Commit Message: $COMMIT_MSG"
+            # Extract the branch name (e.g., feature/ITBMSPR-00001)
+            FEATURE_BRANCH=$(echo "$COMMIT_MSG" | grep -oP '(?<=from ).*')
+            echo "Feature Branch: $FEATURE_BRANCH"
+            # Extract the sprint folder name (e.g., ITBMSPR-00001)
+            SPRINT_FOLDER=$(basename "$FEATURE_BRANCH" | sed 's/feature\///')
+            echo "Sprint Folder: $SPRINT_FOLDER"
+            # Export it for subsequent steps
+            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $GITHUB_ENV
+
 
       
       - name: Generate .env.qa File
@@ -137,7 +152,7 @@ jobs:
             SQL_SERVER_DEV: ${{ secrets.SQL_SERVER_QA }}
         run: |
             if ($env:SQL_SERVER_QA) {
-            Write-Output "Secret is set and has length: $($env:SQL_SERVER_DEV.Length)"
+            Write-Output "Secret is set and has length: $($env:SQL_SERVER_QA.Length)"
             } else {
             Write-Output "Secret is not set."
             }
@@ -169,10 +184,5 @@ jobs:
             ENV_FILE: .env.qa
         run: |
             echo Using ENV_FILE=%ENV_FILE%
-            docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
+            docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p qa up --build -d
         shell: cmd 
-
-      - name: Approval Required for QA Deployment
-        uses: hmarr/auto-approve-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
