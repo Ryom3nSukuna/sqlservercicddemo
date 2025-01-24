@@ -22,6 +22,7 @@ RUN mkdir -p /var/shared && chmod -R 777 /var/shared
 # Copy custom entrypoint script
 COPY ./run-sqlserver.sh /usr/bin/run-sqlserver.sh
 RUN chmod +x /usr/bin/run-sqlserver.sh
+RUN chmod +x /var/opt/sqlserver/db/execute-sql-scripts.sh
 
 # Set the custom entrypoint script
 CMD ["/bin/bash", "/usr/bin/run-sqlserver.sh"]
