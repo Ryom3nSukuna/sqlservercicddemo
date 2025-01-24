@@ -43,7 +43,7 @@ services:
       - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to SQL Server container
       - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
       - ./db:/var/opt/sqlserver/db:ro  # Mount the db folder to the container
-      - .env.${FLASK_ENV}:/var/opt/sqlserver/db/.env.${FLASK_ENV}
+      - .env.${FLASK_ENV}:/var/opt/sqlserver/db/.env.${FLASK_ENV}:rw
     networks:
       - "${FLASK_ENV}-net"
     command: /bin/bash /usr/bin/run-sqlserver.sh
