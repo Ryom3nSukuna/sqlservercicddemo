@@ -29,9 +29,3 @@ echo "INIT_COMPLETED" > /var/shared/init_completed.txt
 
 # Wait for SQL Server process to finish
 wait
-
-# Ensure execute permissions
-chmod +x /var/opt/sqlserver/db/execute-sql-scripts.sh
-
-# Execute the script
-/var/opt/sqlserver/db/execute-sql-scripts.sh
