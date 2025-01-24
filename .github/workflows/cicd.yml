@@ -119,8 +119,8 @@ jobs:
         run: |
             Write-Host "Extracting Sprint Folder from the Commit Message..."
             # Extract the commit message
-            $CommitMessage = git log -1 --pretty=%B
-            Write-Host "Commit Message: $CommitMessage"
+            $CommitMessage = (git log -1 --pretty=%B).Trim()
+            Write-Host "Raw Commit Message: `"$CommitMessage`""
             # Ensure the commit message contains "feature/"
             if ($CommitMessage -match "feature/") {
                 # Find the starting index of "feature/"
