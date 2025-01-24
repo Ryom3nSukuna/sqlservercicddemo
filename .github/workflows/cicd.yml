@@ -102,12 +102,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Mark Repository as Safe
+        run: git config --global --add safe.directory C:/actions-runner/_work/sqlservercicddemo/sqlservercicddemo
+      
       - name: Extract Sprint Folder from Merge Commit
         id: sprint
         shell: powershell
         run: |
             # Get the last merge commit message
             $COMMIT_MSG = git log -1 --merges --pretty=%B
+            if (-not $COMMIT_MSG) {
+                throw "No merge commit found in history. Cannot extract sprint folder."
+            }
             Write-Output "Commit Message: $COMMIT_MSG"
             # Extract the branch name (e.g., feature/ITBMSPR-00001)
             if ($COMMIT_MSG -match 'from\s+(?<FeatureBranch>.+)') {
@@ -120,8 +126,7 @@ jobs:
             $SPRINT_FOLDER = ($FEATURE_BRANCH -split '/')[1]
             Write-Output "Sprint Folder: $SPRINT_FOLDER"
             # Export it for subsequent steps
-            Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
-    
+            Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV    
       
       - name: Generate .env.qa File
         run: |
