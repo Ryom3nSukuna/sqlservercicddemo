@@ -95,8 +95,7 @@ jobs:
   cd_qa:
     name: Deploy to QA with Approval
     runs-on: self-hosted
-    needs: ci_dev
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop'  # Still ensures it runs only on 'develop'
     environment: qa
     steps:
     
@@ -104,6 +103,9 @@ jobs:
         uses: actions/github-script@v6
         with:
             script: |
+                if (!context.payload.pull_request) {
+                    throw new Error("This action can only run on pull request events.");
+                }
                 const approval = await github.rest.reactions.createForIssueComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -111,6 +113,7 @@ jobs:
                     content: "+1",
                 });
                 console.log("Approval received:", approval);
+            github-token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Checkout Code
         uses: actions/checkout@v3
