@@ -119,9 +119,9 @@ jobs:
                 Write-Output "Sprint Folder: $SPRINT_FOLDER"
                 "SPRINT_FOLDER=$SPRINT_FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             } else {
-                Write-Error "Invalid commit message format: $COMMIT_MSG"
+                Write-Output "Error: Commit message does not match expected format 'feature/ITBMSPR-XXXXX'."
                 exit 1
-            }    
+            }  
       
       - name: Generate .env.qa File
         run: |
