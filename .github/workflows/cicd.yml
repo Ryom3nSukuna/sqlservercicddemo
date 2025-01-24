@@ -115,16 +115,23 @@ jobs:
             # Extract the commit message
             $CommitMessage = git log -1 --pretty=%B
             Write-Host "Commit Message: $CommitMessage"
-            # Regular expression to match the sprint folder name
-            if ($CommitMessage -match "feature\/ITBMSPR-\d{5}") {
-                # Safely extract the sprint folder
-                $SPRINT_FOLDER = $CommitMessage.Substring(7,13)
+            # Ensure the commit message contains "feature/"
+            if ($CommitMessage -match "feature/") {
+                # Find the starting index of "feature/"
+                $StartIndex = $CommitMessage.IndexOf("feature/") + 8
+                
+                # Determine the end of the sprint folder (next space or end of string)
+                $EndIndex = $CommitMessage.IndexOf(" ", $StartIndex)
+                if ($EndIndex -eq -1) { $EndIndex = $CommitMessage.Length }
+                
+                # Extract the sprint folder
+                $SPRINT_FOLDER = $CommitMessage.Substring($StartIndex, $EndIndex - $StartIndex)
                 Write-Host "Extracted Sprint Folder: $SPRINT_FOLDER"
             
-                # Export the value for subsequent steps
+                # Export for further steps
                 Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
             } else {
-                throw "Error: Commit message does not match the expected format 'feature/ITBMSPR-XXXXX'."
+                throw "Error: Commit message does not contain 'feature/' prefix."
             }
       
       - name: Generate .env.qa File
