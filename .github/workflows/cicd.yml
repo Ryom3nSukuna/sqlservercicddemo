@@ -99,21 +99,22 @@ jobs:
     environment: qa
     steps:
     
-      - name: Wait for Approval
+      - name: Wait for Manual Approval
+        if: github.ref == 'refs/heads/develop'
         uses: actions/github-script@v6
         with:
             script: |
-                if (!context.payload.pull_request) {
-                    throw new Error("This action can only run on pull request events.");
-                }
-                const approval = await github.rest.reactions.createForIssueComment({
+                const { data: approvals } = await github.actions.createWorkflowDispatch({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: context.payload.pull_request.number,
-                    content: "+1",
+                    ref: github.ref,
+                    inputs: {
+                    approve: true
+                    }
                 });
-                console.log("Approval received:", approval);
+                console.log("Approval dispatched:", approvals);
             github-token: ${{ secrets.GITHUB_TOKEN }}
+
       
       - name: Checkout Code
         uses: actions/checkout@v3
