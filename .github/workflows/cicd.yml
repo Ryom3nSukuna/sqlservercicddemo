@@ -122,11 +122,11 @@ jobs:
             $CommitMessage = (git log -1 --pretty=%B).Trim()
             Write-Host "Raw Commit Message: `"$CommitMessage`""
             # Ensure the commit message contains "feature/"
-            if ($CommitMessage -match "feature/") {
+            if ($CommitMessage -match 'feature/') {
                 # Find the starting index of "feature/"
-                $StartIndex = $CommitMessage.IndexOf("feature\/") + 8
+                $StartIndex = $CommitMessage.IndexOf('feature/') + 8
                 # Determine the end of the sprint folder (next space or end of string)
-                $EndIndex = $CommitMessage.IndexOf(" ", $StartIndex)
+                $EndIndex = $CommitMessage.IndexOf(' ', $StartIndex)
                 if ($EndIndex -eq -1) { $EndIndex = $CommitMessage.Length }
                 # Extract the sprint folder
                 $SPRINT_FOLDER = $CommitMessage.Substring($StartIndex, $EndIndex - $StartIndex)
