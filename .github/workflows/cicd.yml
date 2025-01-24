@@ -94,7 +94,7 @@ jobs:
       - name: Debug Sprint Folder in Execute Scripts Step
         run: echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
       
-      - name: Execute DB Scripts for Dev
+      - name: Execute DB Scripts for Dev #test exec
         run: |
             docker exec -i dev_sqlserver bash -c "
                 echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...' &&
