@@ -109,24 +109,19 @@ jobs:
         id: sprint
         shell: powershell
         run: |
-            # Get the last merge commit message
-            $COMMIT_MSG = git log -1 --merges --pretty=%B
-            if (-not $COMMIT_MSG) {
-                throw "No merge commit found in history. Cannot extract sprint folder."
-            }
+            Write-Output "Extracting Sprint Folder from the Commit Message..."
+            # Get the latest commit message
+            $COMMIT_MSG = git log -1 --pretty=%B
             Write-Output "Commit Message: $COMMIT_MSG"
-            # Extract the branch name (e.g., feature/ITBMSPR-00001)
-            if ($COMMIT_MSG -match 'from\s+(?<FeatureBranch>.+)') {
-                $FEATURE_BRANCH = $Matches['FeatureBranch']
+            # Validate and extract sprint folder
+            if ($COMMIT_MSG -match "feature/ITBMSPR-[0-9]{5}") {
+                $SPRINT_FOLDER = ($Matches[0] -replace "feature/", "")
+                Write-Output "Sprint Folder: $SPRINT_FOLDER"
+                "SPRINT_FOLDER=$SPRINT_FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             } else {
-                throw "Unable to extract feature branch from commit message: $COMMIT_MSG"
-            }
-            Write-Output "Feature Branch: $FEATURE_BRANCH"
-            # Extract the sprint folder name (e.g., ITBMSPR-00001)
-            $SPRINT_FOLDER = ($FEATURE_BRANCH -split '/')[1]
-            Write-Output "Sprint Folder: $SPRINT_FOLDER"
-            # Export it for subsequent steps
-            Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV    
+                Write-Error "Invalid commit message format: $COMMIT_MSG"
+                exit 1
+            }    
       
       - name: Generate .env.qa File
         run: |
