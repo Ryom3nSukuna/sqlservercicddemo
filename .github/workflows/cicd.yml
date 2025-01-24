@@ -107,26 +107,22 @@ jobs:
       
       - name: Extract Sprint Folder from Commit Message
         id: sprint
-        shell: cmd
+        shell: powershell
         run: |
-            echo Extracting Sprint Folder from the Commit Message...
-            :: Get the latest commit message
-            for /f "tokens=*" %%A in ('git log -1 --pretty=%%B') do set "COMMIT_MSG=%%A"
-            echo Commit Message: %COMMIT_MSG%
-            :: Define the regex pattern (using `findstr` for simplicity)
-            echo %COMMIT_MSG% | findstr /r /c:"feature/ITBMSPR-[0-9][0-9][0-9][0-9][0-9]" > nul
-            if errorlevel 1 (
-                echo Error: Commit message does not match the expected format "feature/ITBMSPR-XXXXX".
-                exit /b 1
-            )
-            :: Extract the sprint folder (substring from commit message)
-            for /f "tokens=1 delims= " %%B in ('echo %COMMIT_MSG%') do (
-                set "SPRINT_FOLDER=%%B"
-            )
-            set "SPRINT_FOLDER=%SPRINT_FOLDER:feature/=%"
-            echo Sprint Folder: %SPRINT_FOLDER%
-            :: Export to GitHub environment variable
-            echo SPRINT_FOLDER=%SPRINT_FOLDER% >> %GITHUB_ENV%  
+            Write-Host "Extracting Sprint Folder from the Commit Message..."
+            # Get the latest commit message
+            $COMMIT_MSG = git log -1 --pretty=%B
+            Write-Host "Commit Message: $COMMIT_MSG"
+            # Check if the commit message matches the expected format
+            if ($COMMIT_MSG -match "feature\/ITBMSPR-\d{5}") {
+                # Extract the sprint folder name
+                $SPRINT_FOLDER = ($Matches[0] -replace "feature\/", "")
+                Write-Host "Sprint Folder: $SPRINT_FOLDER"
+                # Export it for subsequent steps
+                echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+            } else {
+                throw "Error: Commit message does not match the expected format 'feature/ITBMSPR-XXXXX'."
+            }
       
       - name: Generate .env.qa File
         run: |
