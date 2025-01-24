@@ -107,6 +107,12 @@ jobs:
       - name: Mark Repository as Safe
         run: git config --global --add safe.directory C:/actions-runner/_work/sqlservercicddemo/sqlservercicddemo
       
+      - name: Debug Commit Message
+        shell: powershell
+        run: |
+            $CommitMessage = (git log -1 --pretty=%B).Trim()
+            Write-Host "Raw Commit Message: `"$CommitMessage`""
+      
       - name: Extract Sprint Folder from Commit Message
         id: sprint
         shell: powershell
