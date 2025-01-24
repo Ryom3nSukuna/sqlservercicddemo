@@ -95,8 +95,7 @@ jobs:
   cd_qa:
     name: Deploy to QA with Approval
     runs-on: self-hosted
-    needs: ci_dev
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop'  # Still ensures it runs only on 'develop'
     environment: qa
     steps:
     
