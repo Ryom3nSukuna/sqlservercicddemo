@@ -99,12 +99,6 @@ jobs:
     environment: qa
     steps:
     
-      - name: Require Manual Approval
-        uses: reviewdog/action-manual-approval@v1
-        with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      
       - name: Checkout Code
         uses: actions/checkout@v3
 
