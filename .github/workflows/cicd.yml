@@ -99,7 +99,7 @@ jobs:
             docker exec -i dev_sqlserver bash -c "
                 echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...' &&
                 cd /var/opt/sqlserver/db &&
-                execute-sql-scripts.sh
+                .\execute-sql-scripts.sh
             "
 
 
