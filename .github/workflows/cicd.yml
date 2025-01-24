@@ -104,21 +104,24 @@ jobs:
 
       - name: Extract Sprint Folder from Merge Commit
         id: sprint
-        shell: bash
+        shell: powershell
         run: |
             # Get the last merge commit message
-            COMMIT_MSG=$(git log -1 --merges --pretty=%B)
-            echo "Commit Message: $COMMIT_MSG"
+            $COMMIT_MSG = git log -1 --merges --pretty=%B
+            Write-Output "Commit Message: $COMMIT_MSG"
             # Extract the branch name (e.g., feature/ITBMSPR-00001)
-            FEATURE_BRANCH=$(echo "$COMMIT_MSG" | grep -oP '(?<=from ).*')
-            echo "Feature Branch: $FEATURE_BRANCH"
+            if ($COMMIT_MSG -match 'from\s+(?<FeatureBranch>.+)') {
+                $FEATURE_BRANCH = $Matches['FeatureBranch']
+            } else {
+                throw "Unable to extract feature branch from commit message: $COMMIT_MSG"
+            }
+            Write-Output "Feature Branch: $FEATURE_BRANCH"
             # Extract the sprint folder name (e.g., ITBMSPR-00001)
-            SPRINT_FOLDER=$(basename "$FEATURE_BRANCH" | sed 's/feature\///')
-            echo "Sprint Folder: $SPRINT_FOLDER"
+            $SPRINT_FOLDER = ($FEATURE_BRANCH -split '/')[1]
+            Write-Output "Sprint Folder: $SPRINT_FOLDER"
             # Export it for subsequent steps
-            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $GITHUB_ENV
-
-
+            Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+    
       
       - name: Generate .env.qa File
         run: |
