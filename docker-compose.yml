@@ -30,7 +30,9 @@ services:
       dockerfile: Dockerfile.sqlserver  # Custom Dockerfile for SQL Server
     container_name: "${SQL_SERVER}"  # Use environment-specific container name
     environment:
-      ENV_FILE: ".env.${FLASK_ENV}"
+      DB_NAME: "${DATABASE}"
+      DB_UID: "${DBUID}"
+      SPRINT_FOLDER: "${SPRINT_FOLDER}"
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "${DBPWD}"
       COMPOSE_PROJECT_NAME: "${FLASK_ENV}_project"  # Dynamically set project name
@@ -43,7 +45,6 @@ services:
       - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to SQL Server container
       - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
       - ./db:/var/opt/sqlserver/db:ro  # Mount the db folder to the container
-      - .env.${FLASK_ENV}:/var/opt/sqlserver/db/.env.${FLASK_ENV}:ro
     networks:
       - "${FLASK_ENV}-net"
     command: /bin/bash /usr/bin/run-sqlserver.sh
