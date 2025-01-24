@@ -89,83 +89,88 @@ jobs:
         run: |
             echo Using ENV_FILE=%ENV_FILE%
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
-        shell: cmd #see what is happening...
-        
-      #- name: Debug Sprint Folder in Execute Scripts Step
-      #  run: echo "SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}"
-      #
-      #- name: Execute DB Scripts for Dev #test exec
-      #  run: |
-      #      docker exec -i dev_sqlserver bash -c "
-      #          echo 'Starting execution of SQL scripts in Sprint Folder: ${SPRINT_FOLDER}...' &&
-      #          cd /var/opt/sqlserver/db &&
-      #          ./execute-sql-scripts.sh
-      #      "
-
+        shell: cmd 
 
   cd_qa:
     name: Deploy to QA with Approval
     runs-on: self-hosted
     needs: ci_dev
     if: github.ref == 'refs/heads/develop'
-    environment:
-      name: QA
-      url: http://qa.sqlserver
+    environment: qa
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Extract Sprint Folder from Branch Name
         id: sprint
+        shell: powershell
         run: |
-          $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
-          $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
-          Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+            $BRANCH_NAME = ($env:GITHUB_REF -split "/")[-1]
+            Write-Host "Branch Name: $BRANCH_NAME"
+            $SPRINT_FOLDER = $BRANCH_NAME -replace '^feature/', ''
+            Write-Host "Sprint Folder: $SPRINT_FOLDER"
+            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
 
-      - name: Generate .env.qa for Docker Compose
+      
+      - name: Generate .env.qa File
         run: |
-          Write-Output "SQL_SERVER=$env:SQL_SERVER_QA" > .env.qa
-          Write-Output "DATABASE=$env:DATABASE_QA" >> .env.qa
-          Write-Output "DBUID=$env:DBUID_QA" >> .env.qa
-          Write-Output "DBPWD=$env:DBPWD_QA" >> .env.qa
-          Write-Output "SQL_PORT=1402" >> .env.qa
-          Write-Output "APP_PORT=5002" >> .env.qa
-          Write-Output "FLASK_ENV=qa" >> .env.qa
+            echo SQL_SERVER=${{ secrets.SQL_SERVER_QA }} > .env.qa
+            echo DATABASE=${{ secrets.DATABASE_QA }} >> .env.qa
+            echo DBUID=${{ secrets.DBUID_QA }} >> .env.qa
+            echo DBPWD=${{ secrets.DBPWD_QA }} >> .env.qa
+            echo SQL_PORT=1401 >> .env.qa
+            echo APP_PORT=5001 >> .env.qa
+            echo FLASK_ENV=qa >> .env.qa
+            echo SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} >> .env.qa
+        shell: cmd
+      
+      - name: Debug Secrets
+        run: |
+            echo SQL_SERVER_DEV=${{ secrets.SQL_SERVER_QA }}
+            echo DATABASE_DEV=${{ secrets.DATABASE_QA }}
+            echo DBUID_DEV=${{ secrets.DBUID_QA }}
+            echo DBPWD_DEV=${{ secrets.DBPWD_QA }}
+        shell: cmd
+      
+      - name: Verify Secret Access
+        env:
+            SQL_SERVER_DEV: ${{ secrets.SQL_SERVER_QA }}
+        run: |
+            if ($env:SQL_SERVER_QA) {
+            Write-Output "Secret is set and has length: $($env:SQL_SERVER_DEV.Length)"
+            } else {
+            Write-Output "Secret is not set."
+            }
+        
+      - name: Debug .env.qa File Path
+        run: |
+            $ENV_FILE = ".env.qa"
+            Write-Output "ENV_FILE=$ENV_FILE"
+            if (Test-Path $ENV_FILE) {
+            Write-Output "ENV_FILE exists and is accessible."
+            } else {
+            Write-Output "ENV_FILE is missing or inaccessible."
+            }
+        shell: powershell 
+
+      - name: Test Docker Access
+        run: |
+            docker ps
+            docker info
+        shell: cmd # fixed runner let's see
+      
+      - name: Debug .env.qa File
+        run: |
+            type .env.qa
+        shell: cmd
       
       - name: Start QA Environment with Docker Compose
         env:
-          ENV_FILE: .env.qa
+            ENV_FILE: .env.qa
         run: |
-          docker-compose -f docker-compose.yml --env-file $ENV_FILE -p qa up --build -d
-
-      - name: Execute DB Scripts for QA
-        env:
-          ENV_FILE: .env.qa
-          SQL_SERVER: $env:SQL_SERVER_QA
-          DATABASE: $env:DATABASE_QA
-          DBUID: $env:DBUID_QA
-          DBPWD: $env:DBPWD_QA
-          SPRINT_FOLDER: $env:SPRINT_FOLDER
-          SQL_PORT: 1402
-        run: |
-          docker exec -i qa_sqlserver powershell -Command "
-            foreach ($file in Get-ChildItem -Path 'C:/var/opt/sqlserver/db/$SPRINT_FOLDER/Exec/*.sql') {
-              $SCRIPT_NAME = $file.Name
-              $EXISTS = sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = ''$SCRIPT_NAME''' -h -1
-              if ($EXISTS -eq 0) {
-                Write-Output 'Executing $SCRIPT_NAME...'
-                sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -i $file.FullName
-                if ($?) {
-                  sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Success'')'
-                } else {
-                  sqlcmd -S $env:SQL_SERVER -U $env:DBUID -P $env:DBPWD -d $env:DATABASE -Q 'INSERT INTO ExecutedScripts (ScriptName, Status) VALUES (''$SCRIPT_NAME'', ''Failure'')'
-                  exit 1
-                }
-              } else {
-                Write-Output 'Skipping already executed script: $SCRIPT_NAME'
-              }
-            }
-          "
+            echo Using ENV_FILE=%ENV_FILE%
+            docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
+        shell: cmd 
 
       - name: Approval Required for QA Deployment
         uses: hmarr/auto-approve-action@v2
