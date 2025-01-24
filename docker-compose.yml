@@ -47,7 +47,7 @@ services:
       - ./db:/var/opt/sqlserver/db:ro  # Mount the db folder to the container
     networks:
       - "${FLASK_ENV}-net"
-    command: /bin/bash /usr/bin/run-sqlserver.sh && /var/opt/sqlserver/db/execute-sql-scripts.sh
+    command: /bin/bash /usr/bin/run-sqlserver.sh
     healthcheck:
       test: [
         "CMD-SHELL",
