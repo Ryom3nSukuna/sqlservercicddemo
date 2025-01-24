@@ -55,7 +55,7 @@ services:
     healthcheck:
       test: [
         "CMD-SHELL",
-        "test -f /var/shared/init_completed.txt && ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DBPWD} -Q 'SELECT 1'"
+        "test -f /var/shared/init_completed.txt && ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DBPWD} -Q 'SELECT 1' && /var/opt/sqlserver/db/execute-sql-scripts.sh"
       ]
       interval: 100s
       timeout: 5s
