@@ -10,7 +10,7 @@ for file in *.sql; do
   echo "Checking if $SCRIPT_NAME has already been executed..."
   
   # Check if the script is logged in the ExecutedScripts table.
-  SCRIPT_COMPLETED=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1)
+  SCRIPT_COMPLETED=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1 | tr -d '[:space:]')
 
   if [ "$SCRIPT_COMPLETED" -eq 0 ]; then
     echo "Executing $SCRIPT_NAME..."
