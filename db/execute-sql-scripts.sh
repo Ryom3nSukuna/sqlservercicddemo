@@ -23,6 +23,7 @@ for file in *.sql; do
 		echo "Logging failure for $SCRIPT_NAME..."
 		ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('$SCRIPT_NAME', 'Failure')"
 		exit 1
+	fi
   else
     echo "Skipping already executed script: $SCRIPT_NAME"
   fi
