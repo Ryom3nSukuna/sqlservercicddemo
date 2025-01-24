@@ -118,7 +118,7 @@ jobs:
             # Regular expression to match the sprint folder name
             if ($CommitMessage -match "feature\/ITBMSPR-\d{5}") {
                 # Safely extract the sprint folder
-                $SPRINT_FOLDER = $CommitMessage.Substring($CommitMessage.IndexOf("/")+1,13)
+                $SPRINT_FOLDER = $CommitMessage.Substring($CommitMessage.IndexOf("\/")+1,13)
                 Write-Host "Extracted Sprint Folder: $SPRINT_FOLDER"
             
                 # Export the value for subsequent steps
