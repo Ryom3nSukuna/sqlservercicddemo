@@ -1,27 +1,15 @@
 #!/bin/bash
 
-# Print received variables for debugging
-echo "ISPRINT_FOLDER=${ISPRINT_FOLDER}"
-echo "IDATABASE=${IDATABASE}"
-echo "IDBPWD=${IDBPWD}"
+echo "Executing SQL scripts in Sprint Folder: ${SPRINT_FOLDER}..."
+cd /var/opt/sqlserver/db/${SPRINT_FOLDER}/Exec || exit 1
 
-echo "Executing SQL scripts in Sprint Folder: ${ISPRINT_FOLDER}..."
-echo "Connecting to database ${IDATABASE}."
-
-# Navigate to the correct directory
-cd /var/opt/sqlserver/db/"${ISPRINT_FOLDER}"/Exec || {
-    echo "Directory /var/opt/sqlserver/db/${ISPRINT_FOLDER}/Exec does not exist."
+for file in *.sql; do
+  echo "Executing $file..."
+  /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DBUID} -P ${DBPWD} -d ${DATABASE} -i "$file"
+  if [ $? -eq 0 ]; then
+    echo "Success: $file"
+  else
+    echo "Failure: $file"
     exit 1
-}
-
-# Execute all .sql scripts
-for sql_file in *.sql; do
-    echo "Executing ${sql_file}..."
-    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${IDBPWD}" -d "${IDATABASE}" -i "${sql_file}"
-    if [ $? -eq 0 ]; then
-        echo "Successfully executed ${sql_file}"
-    else
-        echo "Failed to execute ${sql_file}" >&2
-        exit 1
-    fi
+  fi
 done
