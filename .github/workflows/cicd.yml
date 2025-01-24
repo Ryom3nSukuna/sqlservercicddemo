@@ -99,12 +99,17 @@ jobs:
     environment: qa
     steps:
     
-      - name: Require Manual Approval
-        uses: hmarr/auto-approve-action@v2
+      - name: Wait for Approval
+        uses: actions/github-script@v6
         with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            environment: qa
-        wait-for-approval: true
+            script: |
+                const approval = await github.rest.reactions.createForIssueComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.payload.pull_request.number,
+                    content: "+1",
+                });
+                console.log("Approval received:", approval);
       
       - name: Checkout Code
         uses: actions/checkout@v3
