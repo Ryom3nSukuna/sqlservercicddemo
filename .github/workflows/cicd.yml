@@ -113,13 +113,15 @@ jobs:
             # Get the latest commit message
             $COMMIT_MSG = git log -1 --pretty=%B
             Write-Output "Commit Message: $COMMIT_MSG"
+            # Define the regex pattern
+            $pattern = "feature/ITBMSPR-[0-9]{5}"
             # Validate and extract sprint folder
-            if ($COMMIT_MSG -match "feature/ITBMSPR-[0-9]{5}") {
-                $SPRINT_FOLDER = ($Matches[0] -replace "feature/", "")
+            if ($COMMIT_MSG -match $pattern) {
+                $SPRINT_FOLDER = $Matches[0] -replace "feature/", ""
                 Write-Output "Sprint Folder: $SPRINT_FOLDER"
                 "SPRINT_FOLDER=$SPRINT_FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             } else {
-                Write-Output "Error: Commit message does not match expected format 'feature/ITBMSPR-XXXXX'."
+                Write-Output "Error: Commit message does not match the expected format 'feature/ITBMSPR-XXXXX'."
                 exit 1
             }  
       
