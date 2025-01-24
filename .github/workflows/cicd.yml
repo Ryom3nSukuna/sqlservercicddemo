@@ -105,26 +105,28 @@ jobs:
       - name: Mark Repository as Safe
         run: git config --global --add safe.directory C:/actions-runner/_work/sqlservercicddemo/sqlservercicddemo
       
-      - name: Extract Sprint Folder from Merge Commit
+      - name: Extract Sprint Folder from Commit Message
         id: sprint
-        shell: powershell
+        shell: cmd
         run: |
-            Write-Output "Extracting Sprint Folder from the Commit Message..."
-            # Get the latest commit message
-            $COMMIT_MSG = git log -1 --pretty=%B
-            Write-Output "Commit Message: $COMMIT_MSG"
-            # Define the regex pattern
-            $pattern = "feature/ITBMSPR-[0-9]{5}"
-            # Validate and extract sprint folder
-            if ($COMMIT_MSG -match $pattern) {
-                $SPRINT_FOLDER = $Matches[0] -replace "feature/", ""
-                Write-Output "Sprint Folder: $SPRINT_FOLDER"
-                "SPRINT_FOLDER=$SPRINT_FOLDER"
-                echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
-            } else {
-                Write-Output "Error: Commit message does not match the expected format 'feature/ITBMSPR-XXXXX'."
-                exit 1
-            }  
+            echo Extracting Sprint Folder from the Commit Message...
+            :: Get the latest commit message
+            for /f "tokens=*" %%A in ('git log -1 --pretty=%%B') do set "COMMIT_MSG=%%A"
+            echo Commit Message: %COMMIT_MSG%
+            :: Define the regex pattern (using `findstr` for simplicity)
+            echo %COMMIT_MSG% | findstr /r /c:"feature/ITBMSPR-[0-9][0-9][0-9][0-9][0-9]" > nul
+            if errorlevel 1 (
+                echo Error: Commit message does not match the expected format "feature/ITBMSPR-XXXXX".
+                exit /b 1
+            )
+            :: Extract the sprint folder (substring from commit message)
+            for /f "tokens=1 delims= " %%B in ('echo %COMMIT_MSG%') do (
+                set "SPRINT_FOLDER=%%B"
+            )
+            set "SPRINT_FOLDER=%SPRINT_FOLDER:feature/=%"
+            echo Sprint Folder: %SPRINT_FOLDER%
+            :: Export to GitHub environment variable
+            echo SPRINT_FOLDER=%SPRINT_FOLDER% >> %GITHUB_ENV%  
       
       - name: Generate .env.qa File
         run: |
