@@ -99,42 +99,43 @@ jobs:
     environment: qa
     steps:
     
-      - name: Wait for Approval
-        uses: actions/github-script@v6
-        with:
-            script: |
-                if (!context.payload.pull_request) {
-                    throw new Error("This action can only run on pull request events.");
-                }
-                const approval = await github.rest.reactions.createForIssueComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: context.payload.pull_request.number,
-                    content: "+1",
-                });
-                console.log("Approval received:", approval);
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+            fetch-depth: 1  # Ensures only the latest commit is fetched
 
-      - name: Extract Sprint Folder from Merge Commit
-        id: sprint
-        shell: bash
+      - name: Mark Repository as Safe
+        run: git config --global --add safe.directory C:/actions-runner/_work/sqlservercicddemo/sqlservercicddemo
+      
+      - name: Debug Commit Message
+        shell: powershell
         run: |
-            # Get the last merge commit message
-            COMMIT_MSG=$(git log -1 --merges --pretty=%B)
-            echo "Commit Message: $COMMIT_MSG"
-            # Extract the branch name (e.g., feature/ITBMSPR-00001)
-            FEATURE_BRANCH=$(echo "$COMMIT_MSG" | grep -oP '(?<=from ).*')
-            echo "Feature Branch: $FEATURE_BRANCH"
-            # Extract the sprint folder name (e.g., ITBMSPR-00001)
-            SPRINT_FOLDER=$(basename "$FEATURE_BRANCH" | sed 's/feature\///')
-            echo "Sprint Folder: $SPRINT_FOLDER"
-            # Export it for subsequent steps
-            echo "SPRINT_FOLDER=$SPRINT_FOLDER" >> $GITHUB_ENV
-
-
+            $CommitMessage = (git log -1 --pretty=%B).Trim()
+            Write-Host "Raw Commit Message: `"$CommitMessage`""
+      
+      - name: Extract Sprint Folder from Commit Message
+        shell: powershell
+        run: |
+            Write-Host "Extracting Sprint Folder from the Commit Message..."
+            # Extract the commit message (handles multi-line output)
+            $CommitMessage = (git log -1 --pretty=%B) -join "`n"
+            $CommitMessage = $CommitMessage.Trim()
+            Write-Host "Commit Message: $CommitMessage"
+            # Ensure the commit message contains "feature/"
+            if ($CommitMessage -match "feature/") {
+                # Find the starting index of "feature/"
+                $StartIndex = $CommitMessage.IndexOf("feature/") + 8
+                # Determine the end of the sprint folder (next space or end of string)
+                $EndIndex = $CommitMessage.IndexOf(" ", $StartIndex)
+                if ($EndIndex -eq -1) { $EndIndex = $CommitMessage.Length }
+                # Extract the sprint folder
+                $SPRINT_FOLDER = $CommitMessage.Substring($StartIndex, $EndIndex - $StartIndex).Trim()
+                Write-Host "Extracted Sprint Folder: $SPRINT_FOLDER"
+                # Export for further steps
+                Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
+            } else {
+                throw "Error: Commit message does not contain 'feature/' prefix."
+            }
       
       - name: Generate .env.qa File
         run: |
@@ -142,8 +143,8 @@ jobs:
             echo DATABASE=${{ secrets.DATABASE_QA }} >> .env.qa
             echo DBUID=${{ secrets.DBUID_QA }} >> .env.qa
             echo DBPWD=${{ secrets.DBPWD_QA }} >> .env.qa
-            echo SQL_PORT=1401 >> .env.qa
-            echo APP_PORT=5001 >> .env.qa
+            echo SQL_PORT=1402 >> .env.qa
+            echo APP_PORT=5002 >> .env.qa
             echo FLASK_ENV=qa >> .env.qa
             echo SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} >> .env.qa
         shell: cmd
