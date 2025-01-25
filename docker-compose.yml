@@ -45,17 +45,18 @@ services:
       - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to SQL Server container
       - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
       - ./db:/var/opt/sqlserver/db:ro  # Mount the db folder to the container
+      - ./logs:/var/log  # Mount the logs folder on the host to /var/log in the container
     networks:
       - "${FLASK_ENV}-net"
     command: >
         /bin/bash -c "
-        /usr/bin/run-sqlserver.sh
-        /var/opt/sqlserver/db/execute-sql-scripts.sh
+        /usr/bin/run-sqlserver.sh 2>&1 | tee /var/log/run-sqlserver.log &&
+        /var/opt/sqlserver/db/execute-sql-scripts.sh 2>&1 | tee /var/log/execute-sql-scripts.log
         "
     healthcheck:
       test: [
         "CMD-SHELL",
-        "test -f /var/shared/init_completed.txt && ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DBPWD} -Q 'SELECT 1' && /var/opt/sqlserver/db/execute-sql-scripts.sh"
+        "test -f /var/shared/init_completed.txt && ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${DBPWD} -Q 'SELECT 1'"
       ]
       interval: 100s
       timeout: 5s

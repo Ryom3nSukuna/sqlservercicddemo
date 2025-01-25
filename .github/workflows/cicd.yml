@@ -95,8 +95,8 @@ jobs:
       - name: Capture Logs on Failure
         if: failure()
         run: |
-            docker logs dev_sqlserver > dev_sqlserver_logs.txt
-            type dev_sqlserver_logs.txt
+            docker logs ${{ secrets.SQL_SERVER_DEV }} > ${{ secrets.SQL_SERVER_DEV }}_logs.txt
+            type ${{ secrets.SQL_SERVER_DEV }}_logs.txt
 
   cd_qa:
     name: Deploy to QA with Approval
