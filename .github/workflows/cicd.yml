@@ -114,22 +114,22 @@ jobs:
             Write-Host "Raw Commit Message: `"$CommitMessage`""
       
       - name: Extract Sprint Folder from Commit Message
-        id: sprint
         shell: powershell
         run: |
             Write-Host "Extracting Sprint Folder from the Commit Message..."
-            # Extract the commit message
-            $CommitMessage = (git log -1 --pretty=%B).Trim()
-            Write-Host "Raw Commit Message: `"$CommitMessage`""
+            # Extract the commit message (handles multi-line output)
+            $CommitMessage = (git log -1 --pretty=%B) -join "`n"
+            $CommitMessage = $CommitMessage.Trim()
+            Write-Host "Commit Message: $CommitMessage"
             # Ensure the commit message contains "feature/"
-            if ($CommitMessage -match 'feature/') {
+            if ($CommitMessage -match "feature/") {
                 # Find the starting index of "feature/"
-                $StartIndex = $CommitMessage.IndexOf('feature/') + 8
+                $StartIndex = $CommitMessage.IndexOf("feature/") + 8
                 # Determine the end of the sprint folder (next space or end of string)
-                $EndIndex = $CommitMessage.IndexOf(' ', $StartIndex)
+                $EndIndex = $CommitMessage.IndexOf(" ", $StartIndex)
                 if ($EndIndex -eq -1) { $EndIndex = $CommitMessage.Length }
                 # Extract the sprint folder
-                $SPRINT_FOLDER = $CommitMessage.Substring($StartIndex, $EndIndex - $StartIndex)
+                $SPRINT_FOLDER = $CommitMessage.Substring($StartIndex, $EndIndex - $StartIndex).Trim()
                 Write-Host "Extracted Sprint Folder: $SPRINT_FOLDER"
                 # Export for further steps
                 Write-Output "SPRINT_FOLDER=$SPRINT_FOLDER" >> $env:GITHUB_ENV
