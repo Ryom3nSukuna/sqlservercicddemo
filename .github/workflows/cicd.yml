@@ -143,8 +143,8 @@ jobs:
             echo DATABASE=${{ secrets.DATABASE_QA }} >> .env.qa
             echo DBUID=${{ secrets.DBUID_QA }} >> .env.qa
             echo DBPWD=${{ secrets.DBPWD_QA }} >> .env.qa
-            echo SQL_PORT=1401 >> .env.qa
-            echo APP_PORT=5001 >> .env.qa
+            echo SQL_PORT=1402 >> .env.qa
+            echo APP_PORT=5002 >> .env.qa
             echo FLASK_ENV=qa >> .env.qa
             echo SPRINT_FOLDER=${{ env.SPRINT_FOLDER }} >> .env.qa
         shell: cmd
