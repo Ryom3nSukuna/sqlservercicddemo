@@ -16,13 +16,14 @@ for file in *.sql; do
   if [ "$SCRIPT_COMPLETED" -eq 0 ]; then
     echo "Executing $SCRIPT_NAME..."
     ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file"
+    SQL_EXIT_CODE=$?  # Capture the exit code of sqlcmd
     
-    if [ $? -eq 0 ]; then
+    if [ $SQL_EXIT_CODE -eq 0 ]; then
       echo "Logging success for $SCRIPT_NAME..."
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('$SCRIPT_NAME', 'Success')"
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
-      echo "Script $SCRIPT_NAME failed. Initiating rollback..."
+      echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Initiating rollback..."
       
       # Trigger rollback
       cd ../Rollback || exit 1
@@ -35,6 +36,7 @@ for file in *.sql; do
           echo "Rollback script not found for $ROLLBACK_FILE."
         fi
       done
+      echo "Rollback complete. Exiting with failure."
       exit 1  # Mark failure after rollback
     fi
   else

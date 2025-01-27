@@ -92,6 +92,11 @@ jobs:
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p dev up --build -d
         shell: cmd 
         
+      - name: Execute DB Scripts for Dev
+        run: |
+            docker exec dev_sqlserver bash -c "/var/opt/sqlserver/db/execute-sql-scripts.sh"
+        continue-on-error: false
+        
       - name: Capture Logs on Failure
         if: failure()
         run: |

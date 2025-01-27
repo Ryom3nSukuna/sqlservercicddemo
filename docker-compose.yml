@@ -50,8 +50,7 @@ services:
       - "${FLASK_ENV}-net"
     command: >
         /bin/bash -c "
-        /usr/bin/run-sqlserver.sh 2>&1 | tee /var/log/run-sqlserver.log &&
-        /var/opt/sqlserver/db/execute-sql-scripts.sh 2>&1 | tee /var/log/execute-sql-scripts.log
+        /usr/bin/run-sqlserver.sh 2>&1 | tee /var/log/run-sqlserver.log
         "
     healthcheck:
       test: [
