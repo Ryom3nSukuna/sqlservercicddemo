@@ -5,26 +5,37 @@ BEGIN
 END;
 GO
 
--- Create admin user
-CREATE LOGIN DevAdminUser WITH PASSWORD = 'DevAdmin@Secure123', CHECK_POLICY = ON;
-ALTER SERVER ROLE sysadmin ADD MEMBER DevAdminUser;
+-- Create admin login only if it doesn't already exist
+IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'DevAdminUser')
+BEGIN
+    CREATE LOGIN DevAdminUser WITH PASSWORD = 'DevAdmin@Secure123', CHECK_POLICY = ON;
+    ALTER SERVER ROLE sysadmin ADD MEMBER DevAdminUser;
+END;
 GO
 
--- Use the [DevDB] database
+-- Use the QA database
 USE [DevDB];
 GO
 
--- Map the login to a database user in [DevDB]
-CREATE USER DevAdminUser FOR LOGIN DevAdminUser;
+-- Create the database user only if it doesn't already exist
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'DevAdminUser')
+BEGIN
+    CREATE USER DevAdminUser FOR LOGIN DevAdminUser;
+    EXEC sp_addrolemember 'db_owner', 'DevAdminUser';
+END;
 GO
 
--- Grant the user db_owner permissions in [DevDB]
-EXEC sp_addrolemember 'db_owner', 'DevAdminUser';
-GO
-
-CREATE TABLE ExecutedScripts (
-    ScriptName NVARCHAR(255) PRIMARY KEY,
-    ExecutedAt DATETIME DEFAULT GETDATE(),
-    Status NVARCHAR(50)
-);
+-- Create the ExecutedScripts table only if it doesn't already exist
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES 
+               WHERE TABLE_NAME = 'ExecutedScripts' AND TABLE_SCHEMA = 'dbo')
+BEGIN
+    CREATE TABLE ExecutedScripts (
+        ScrID INT IDENTITY(1,1) PRIMARY KEY,
+        ScriptName NVARCHAR(255) NOT NULL UNIQUE,
+        Status NVARCHAR(50),
+        ExecutionTime DATETIME,
+        RollbackTime DATETIME,
+        ErrorDetails NVARCHAR(MAX)
+    );
+END;
 GO
