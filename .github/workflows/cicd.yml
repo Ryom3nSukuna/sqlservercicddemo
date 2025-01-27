@@ -100,8 +100,7 @@ jobs:
       - name: Capture Logs on Failure
         if: failure()
         run: |
-            docker logs ${{ secrets.SQL_SERVER_DEV }} > ${{ secrets.SQL_SERVER_DEV }}_logs.txt
-            type ${{ secrets.SQL_SERVER_DEV }}_logs.txt
+            docker exec dev_sqlserver bash -c "cat /var/log/sqlscripts/execute-sql-scripts.log && cat /var/log/sqlscripts/rollback-sql-scripts.log"
 
   cd_qa:
     name: Deploy to QA with Approval

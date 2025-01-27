@@ -16,27 +16,44 @@ for file in *.sql; do
   SCRIPT_NAME=$(basename "$file")
   
   # Check if the script has already been executed
-  SCRIPT_COMPLETED=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1 | tr -d '\r\n[:space:]')
+  SCRIPT_STATUS=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SET NOCOUNT ON; SELECT Status FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1 | tr -d '\r\n[:space:]')
 
-  if [ "$SCRIPT_COMPLETED" -eq 0 ]; then
+  if [[ "$SCRIPT_STATUS" != "Success" && "$SCRIPT_STATUS" != "Rolled Back" ]]; then
+    START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
     ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>> $LOG_FILE
-    SQL_EXIT_CODE=$? 
-	echo "SQL_EXIT_CODE is: $SQL_EXIT_CODE" | tee -a $LOG_FILE
+    SQL_EXIT_CODE=$?
 
     if [ $SQL_EXIT_CODE -eq 0 ]; then
       echo "Logging success for $SCRIPT_NAME..." | tee -a $LOG_FILE
-      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "INSERT INTO ExecutedScripts (ScriptName, Status) VALUES ('$SCRIPT_NAME', 'Success')" 2>> $LOG_FILE
+      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
+        INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime)
+        VALUES ('$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
-      echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Initiating rollback..." | tee -a $LOG_FILE
-      
+      ERROR_DETAILS=$(tail -n 10 $LOG_FILE | tr '\n' ' ')
+      echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
+      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
+        INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
+        VALUES ('$SCRIPT_NAME', 'Failed', '$START_TIME', '$ERROR_DETAILS')" 2>> $LOG_FILE
+
       # Trigger rollback
       cd ../Rollback || exit 1
       for executed_script in $(printf "%s\n" "${EXECUTED_SCRIPTS[@]}" | tac); do
         ROLLBACK_FILE="${executed_script}"
         if [ -f "$ROLLBACK_FILE" ]; then
           echo "Rolling back $ROLLBACK_FILE..." | tee -a $ROLLBACK_LOG_FILE
-          ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" 2>> $ROLLBACK_LOG_FILE
+          ROLLBACK_START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+          ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" -b 2>> $ROLLBACK_LOG_FILE
+          ROLLBACK_EXIT_CODE=$?
+
+          if [ $ROLLBACK_EXIT_CODE -eq 0 ]; then
+            ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
+              UPDATE ExecutedScripts
+              SET Status = 'Rolled Back', RollbackTime = '$ROLLBACK_START_TIME'
+              WHERE ScriptName = '$ROLLBACK_FILE'" 2>> $ROLLBACK_LOG_FILE
+          else
+            echo "Rollback for $ROLLBACK_FILE failed with exit code $ROLLBACK_EXIT_CODE." | tee -a $ROLLBACK_LOG_FILE
+          fi
         else
           echo "Rollback script not found for $ROLLBACK_FILE." | tee -a $ROLLBACK_LOG_FILE
         fi
@@ -45,7 +62,7 @@ for file in *.sql; do
       exit 1  # Mark failure after rollback
     fi
   else
-    echo "Skipping already executed script: $SCRIPT_NAME" | tee -a $LOG_FILE
+    echo "Skipping already executed script: $SCRIPT_NAME with status $SCRIPT_STATUS" | tee -a $LOG_FILE
   fi
 done
 
