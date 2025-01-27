@@ -45,7 +45,7 @@ services:
       - ${FLASK_ENV}_init_status:/var/shared  # Mount the shared volume to SQL Server container
       - ${SQL_SERVER}_data:/var/opt/mssql  # Environment-specific data volume
       - ./db:/var/opt/sqlserver/db:ro  # Mount the db folder to the container
-      - ./logs:/var/log  # Mount the logs folder on the host to /var/log in the container
+      - ./logs:/var/log/sqlscripts:rw
     networks:
       - "${FLASK_ENV}-net"
     command: >
