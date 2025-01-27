@@ -20,7 +20,9 @@ for file in *.sql; do
 
   if [[ "$SCRIPT_STATUS" != "Success" && "$SCRIPT_STATUS" != "Rolled Back" ]]; then
     START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
-    ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>> $LOG_FILE
+    ERROR_OUTPUT=$(
+      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>&1
+    )
     SQL_EXIT_CODE=$?
 
     if [ $SQL_EXIT_CODE -eq 0 ]; then
@@ -30,7 +32,7 @@ for file in *.sql; do
         VALUES ('$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
-      ERROR_DETAILS=$(tail -n 10 $LOG_FILE | tr '\n' ' ')
+      ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | grep "Msg" | tr '\n' ' ')
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
