@@ -19,7 +19,7 @@ for file in *.sql; do
   SCRIPT_COMPLETED=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1 | tr -d '\r\n[:space:]')
 
   if [ "$SCRIPT_COMPLETED" -eq 0 ]; then
-    ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" 2>> $LOG_FILE
+    ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>> $LOG_FILE
     SQL_EXIT_CODE=$? 
 	echo "SQL_EXIT_CODE is: $SQL_EXIT_CODE" | tee -a $LOG_FILE
 
