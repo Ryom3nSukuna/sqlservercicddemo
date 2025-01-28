@@ -1,8 +1,8 @@
 -- ITBM-00001-04: Update User Email Domain
 UPDATE Roles
-SET ID = 1
+SET UserID = 1
 WHERE UserName = 'Mike';
 
 UPDATE Roles
-SET ID = 2
+SET UserID = 2
 WHERE UserName = 'Dave';
