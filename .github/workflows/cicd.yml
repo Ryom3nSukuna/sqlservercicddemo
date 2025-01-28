@@ -94,13 +94,13 @@ jobs:
         
       - name: Execute DB Scripts for Dev
         run: |
-            docker exec dev_sqlserver bash -c "/var/opt/sqlserver/db/execute-sql-scripts.sh"
+            docker exec ${{ secrets.SQL_SERVER_DEV }} bash -c "/var/opt/sqlserver/db/execute-sql-scripts.sh"
         continue-on-error: false
         
       - name: Capture Logs on Failure
         if: failure()
         run: |
-            docker exec dev_sqlserver bash -c "cat /var/log/sqlscripts/execute-sql-scripts.log && cat /var/log/sqlscripts/rollback-sql-scripts.log"
+            docker exec ${{ secrets.SQL_SERVER_DEV }} bash -c "cat /var/log/sqlscripts/execute-sql-scripts.log && cat /var/log/sqlscripts/rollback-sql-scripts.log"
 
   cd_qa:
     name: Deploy to QA with Approval
@@ -206,3 +206,14 @@ jobs:
             echo Using ENV_FILE=%ENV_FILE%
             docker-compose -f docker-compose.yml --env-file %ENV_FILE% -p qa up --build -d
         shell: cmd 
+        
+      - name: Execute DB Scripts for QA
+        run: |
+            docker exec ${{ secrets.SQL_SERVER_QA }} bash -c "/var/opt/sqlserver/db/execute-sql-scripts.sh"
+        continue-on-error: false
+        
+      - name: Capture Logs on Failure
+        if: failure()
+        run: |
+            docker exec ${{ secrets.SQL_SERVER_QA }} bash -c "cat /var/log/sqlscripts/execute-sql-scripts.log && cat /var/log/sqlscripts/rollback-sql-scripts.log"
+

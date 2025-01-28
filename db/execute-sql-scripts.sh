@@ -24,7 +24,9 @@ for file in *.sql; do
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>&1
     )
     SQL_EXIT_CODE=$?
-
+	echo "ERROR_OUTPUT: $ERROR_OUTPUT"
+	echo "SQL_EXIT_CODE: $SQL_EXIT_CODE"
+	
     if [ $SQL_EXIT_CODE -eq 0 ]; then
       echo "Logging success for $SCRIPT_NAME..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
