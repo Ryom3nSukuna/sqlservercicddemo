@@ -35,6 +35,7 @@ for file in *.sql; do
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
       ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '/Msg [0-9]+/{msg=$0; getline; print msg "\n" $0}' | tr '\n' ' ')
+	  echo "ERROR_DETAILS: $ERROR_DETAILS"
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
