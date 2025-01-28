@@ -32,17 +32,7 @@ for file in *.sql; do
         VALUES ('$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
-      # Capture the error message including subsequent lines for context if available
-	  ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '
-					/Msg [0-9]+/ {
-						msg=$0; 
-						getline line; 
-						if (line !~ /^[[:space:]]*$/) {
-						msg = msg "\n" line;
-						}
-						print msg
-					}' | tr '\n' ' ' | sed "s/'/''/g")
-
+      ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '/Msg [0-9]+/{msg=$0; getline; print msg "\n" $0}' | tr '\n' ' ')
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
@@ -55,7 +45,7 @@ for file in *.sql; do
         if [ -f "$ROLLBACK_FILE" ]; then
           echo "Rolling back $ROLLBACK_FILE..." | tee -a $ROLLBACK_LOG_FILE
           ROLLBACK_START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
-          ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" -b 2>> $ROLLBACK_LOG_FILE
+          ROLLBACK_OUTPUT=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" -b 2>&1)
           ROLLBACK_EXIT_CODE=$?
 
           if [ $ROLLBACK_EXIT_CODE -eq 0 ]; then
