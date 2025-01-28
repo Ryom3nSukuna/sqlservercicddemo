@@ -33,7 +33,16 @@ for file in *.sql; do
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
       # Capture the error message including subsequent lines for context if available
-	  ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '/Msg [0-9]+/{msg=$0; getline line; if (line ~ /^[[:space:]]*$/) {print msg} else {print msg "\n" line}}' | tr '\n' ' ')
+	  ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '
+					/Msg [0-9]+/ {
+						msg=$0; 
+						getline line; 
+						if (line !~ /^[[:space:]]*$/) {
+						msg = msg "\n" line;
+						}
+						print msg
+					}' | tr '\n' ' ' | sed "s/'/''/g")
+
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
