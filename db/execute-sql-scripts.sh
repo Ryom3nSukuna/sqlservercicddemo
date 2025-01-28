@@ -20,9 +20,13 @@ for file in *.sql; do
 
   if [[ "$SCRIPT_STATUS" != "Success" && "$SCRIPT_STATUS" != "Rolled Back" ]]; then
     START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
-    ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>> $LOG_FILE
+    ERROR_OUTPUT=$(
+      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$file" -b 2>&1
+    )
     SQL_EXIT_CODE=$?
-
+	echo "ERROR_OUTPUT: $ERROR_OUTPUT"
+	echo "SQL_EXIT_CODE: $SQL_EXIT_CODE"
+	
     if [ $SQL_EXIT_CODE -eq 0 ]; then
       echo "Logging success for $SCRIPT_NAME..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
@@ -30,7 +34,8 @@ for file in *.sql; do
         VALUES ('$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
-      ERROR_DETAILS=$(tail -n 10 $LOG_FILE | tr '\n' ' ')
+      ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '/Msg [0-9]+/{msg=$0; getline; print msg "\n" $0}' | tr '\n' ' ' | sed "s/'/''/g")
+	  echo "ERROR_DETAILS: $ERROR_DETAILS"
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
@@ -43,7 +48,7 @@ for file in *.sql; do
         if [ -f "$ROLLBACK_FILE" ]; then
           echo "Rolling back $ROLLBACK_FILE..." | tee -a $ROLLBACK_LOG_FILE
           ROLLBACK_START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
-          ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" -b 2>> $ROLLBACK_LOG_FILE
+          ROLLBACK_OUTPUT=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -i "$ROLLBACK_FILE" -b 2>&1)
           ROLLBACK_EXIT_CODE=$?
 
           if [ $ROLLBACK_EXIT_CODE -eq 0 ]; then
