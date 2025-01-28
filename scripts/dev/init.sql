@@ -1,4 +1,4 @@
--- Create the database
+-- Create the databases
 IF DB_ID('DevDB') IS NULL
 BEGIN
     CREATE DATABASE [DevDB];
