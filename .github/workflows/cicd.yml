@@ -105,7 +105,11 @@ jobs:
   cd_qa:
     name: Deploy to QA with Approval
     runs-on: self-hosted
+<<<<<<< HEAD
     if: github.ref == 'refs/heads/develop'  # Still ensures it runs only on 'develop'.
+=======
+    if: github.ref == 'refs/heads/develop'  # Still ensures it runs only on 'develop'..
+>>>>>>> feature/ITBMSPR-00001
     environment: qa
     steps:
     
