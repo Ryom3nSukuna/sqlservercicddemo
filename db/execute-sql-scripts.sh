@@ -15,7 +15,7 @@ for file in *.sql; do
   echo "Executing $file..." | tee -a $LOG_FILE
   SCRIPT_NAME=$(basename "$file")
   
-  # Check if the script has already been executed.
+  # Check if the script has already been executed
   SCRIPT_STATUS=$(ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U "$DB_UID" -P "$SA_PASSWORD" -d "$DB_NAME" -Q "SET NOCOUNT ON; SELECT Status FROM ExecutedScripts WHERE ScriptName = '$SCRIPT_NAME'" -h -1 | tr -d '\r\n[:space:]')
 
   if [[ "$SCRIPT_STATUS" != "Success" && "$SCRIPT_STATUS" != "Rolled Back" ]]; then
