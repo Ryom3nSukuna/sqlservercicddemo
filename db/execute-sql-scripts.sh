@@ -48,7 +48,8 @@ for file in *.sql; do
 						SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
 					" | tr -d '\r\n[:space:]'
 				  )
-      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
+      echo "NEXT_SCRID: $NEXT_SCRID"
+	  ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
         INSERT INTO ExecutedScripts (ScrID, ScriptName, Status, ExecutionTime, ErrorDetails)
         VALUES ($NEXT_SCRID, '$SCRIPT_NAME', 'Failed', '$START_TIME', '$ERROR_DETAILS')" 2>> $LOG_FILE
 
