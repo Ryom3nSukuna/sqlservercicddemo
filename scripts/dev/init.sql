@@ -25,24 +25,12 @@ BEGIN
 END;
 GO
 
--- Create a sequence for ScrID
-IF NOT EXISTS (SELECT 1 FROM sys.sequences WHERE name = 'ExecutedScriptsSequence')
-BEGIN
-	CREATE SEQUENCE dbo.ExecutedScriptsSequence
-	AS INT
-	START WITH 1
-	INCREMENT BY 1
-	MINVALUE 1
-	NO CYCLE;
-END
-GO
-
 -- Create the ExecutedScripts table only if it doesn't already exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES 
                WHERE TABLE_NAME = 'ExecutedScripts' AND TABLE_SCHEMA = 'dbo')
 BEGIN
     CREATE TABLE ExecutedScripts (
-        ScrID INT NOT NULL DEFAULT (NEXT VALUE FOR dbo.ExecutedScriptsSequence) PRIMARY KEY,
+        ScrID INT NOT NULL PRIMARY KEY,
         ScriptName NVARCHAR(255) NOT NULL UNIQUE,
         Status NVARCHAR(50),
         ExecutionTime DATETIME,
