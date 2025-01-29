@@ -31,7 +31,7 @@ for file in *.sql; do
       echo "Logging success for $SCRIPT_NAME..." | tee -a $LOG_FILE
 	  NEXT_SCRID=$(
 					ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -h -1 -Q "
-						SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
+						SET NOCOUNT ON; SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
 					" | tr -d '\r\n[:space:]'
 				  )
 	  echo "NEXT_SCRID: $NEXT_SCRID"
@@ -45,7 +45,7 @@ for file in *.sql; do
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
 	  NEXT_SCRID=$(
 					ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -h -1 -Q "
-						SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
+						SET NOCOUNT ON; SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
 					" | tr -d '\r\n[:space:]'
 				  )
       echo "NEXT_SCRID: $NEXT_SCRID"
