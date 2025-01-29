@@ -29,17 +29,29 @@ for file in *.sql; do
 	
     if [ $SQL_EXIT_CODE -eq 0 ]; then
       echo "Logging success for $SCRIPT_NAME..." | tee -a $LOG_FILE
+	  NEXT_SCRID=$(
+					ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -h -1 -Q "
+						SET NOCOUNT ON; SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
+					" | tr -d '\r\n[:space:]'
+				  )
+	  echo "NEXT_SCRID: $NEXT_SCRID"
       ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
-        INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime)
-        VALUES ('$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
+        INSERT INTO ExecutedScripts (ScrID, ScriptName, Status, ExecutionTime)
+        VALUES ($NEXT_SCRID, '$SCRIPT_NAME', 'Success', '$START_TIME')" 2>> $LOG_FILE
       EXECUTED_SCRIPTS+=("$SCRIPT_NAME")
     else
       ERROR_DETAILS=$(echo "$ERROR_OUTPUT" | awk '/Msg [0-9]+/{msg=$0; getline; print msg "\n" $0}' | tr '\n' ' ' | sed "s/'/''/g")
 	  echo "ERROR_DETAILS: $ERROR_DETAILS"
       echo "Script $SCRIPT_NAME failed with exit code $SQL_EXIT_CODE. Logging failure and initiating rollback..." | tee -a $LOG_FILE
-      ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
-        INSERT INTO ExecutedScripts (ScriptName, Status, ExecutionTime, ErrorDetails)
-        VALUES ('$SCRIPT_NAME', 'Failed', '$START_TIME', '$ERROR_DETAILS')" 2>> $LOG_FILE
+	  NEXT_SCRID=$(
+					ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -h -1 -Q "
+						SET NOCOUNT ON; SELECT ISNULL(MAX(ScrID), 0) + 1 FROM ExecutedScripts
+					" | tr -d '\r\n[:space:]'
+				  )
+      echo "NEXT_SCRID: $NEXT_SCRID"
+	  ACCEPT_EULA=Y /opt/mssql-tools/bin/sqlcmd -S localhost -U ${DB_UID} -P ${SA_PASSWORD} -d ${DB_NAME} -Q "
+        INSERT INTO ExecutedScripts (ScrID, ScriptName, Status, ExecutionTime, ErrorDetails)
+        VALUES ($NEXT_SCRID, '$SCRIPT_NAME', 'Failed', '$START_TIME', '$ERROR_DETAILS')" 2>> $LOG_FILE
 
       # Trigger rollback
       cd ../Rollback || exit 1

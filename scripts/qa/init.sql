@@ -30,7 +30,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_NAME = 'ExecutedScripts' AND TABLE_SCHEMA = 'dbo')
 BEGIN
     CREATE TABLE ExecutedScripts (
-        ScrID INT IDENTITY(1,1) PRIMARY KEY,
+        ScrID INT NOT NULL PRIMARY KEY,
         ScriptName NVARCHAR(255) NOT NULL UNIQUE,
         Status NVARCHAR(50),
         ExecutionTime DATETIME,
