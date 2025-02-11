@@ -9,7 +9,7 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch: # For manual rollback triggers ad
+  workflow_dispatch: # For manual rollback triggers ad.
 
 jobs:
   ci_dev:
@@ -77,7 +77,7 @@ jobs:
         run: |
             docker ps
             docker info
-        shell: cmd # fixed runner let's see...
+        shell: cmd # fixed runner let's see......
       
       - name: Debug .env.dev File
         run: |
